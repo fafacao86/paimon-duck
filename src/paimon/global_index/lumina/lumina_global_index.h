@@ -92,8 +92,6 @@ class LuminaIndexWriter : public GlobalIndexWriter {
     Result<std::vector<GlobalIndexIOMeta>> Finish() override;
 
  private:
-    static constexpr char kIdentifier[] = "lumina";
-
     int64_t count_ = 0;
     std::shared_ptr<LuminaMemoryPool> pool_;
     std::string field_name_;
