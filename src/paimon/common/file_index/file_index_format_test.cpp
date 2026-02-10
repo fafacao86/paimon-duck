@@ -22,9 +22,10 @@
 #include "paimon/common/file_index/bloomfilter/bloom_filter_file_index.h"
 #include "paimon/common/file_index/bsi/bit_slice_index_bitmap_file_index.h"
 #include "paimon/common/file_index/empty/empty_file_index_reader.h"
+#include "paimon/common/file_index/rangebitmap/range_bitmap.h"
 #include "paimon/data/timestamp.h"
-#include "paimon/defs.h"
 #include "paimon/file_index/file_index_result.h"
+#include "paimon/file_index/file_indexer_factory.h"
 #include "paimon/fs/local/local_file_system.h"
 #include "paimon/io/byte_array_input_stream.h"
 #include "paimon/memory/memory_pool.h"
@@ -815,6 +816,13 @@ TEST_F(FileIndexFormatTest, TestBitmapIndexWithTimestamp) {
 
     check_nano("ts_nano");
     check_nano("ts_tz_nano");
+}
+
+TEST_F(FileIndexFormatTest, TestRangeBitmapFactory) {
+    // Test that RangeBitmapFileIndex is properly registered in the factory system
+    auto range_bitmap_indexer = FileIndexerFactory::Get("range-bitmap", {});
+    ASSERT_TRUE(range_bitmap_indexer.ok());
+    ASSERT_TRUE(range_bitmap_indexer.value() != nullptr);
 }
 
 }  // namespace paimon::test

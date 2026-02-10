@@ -16,14 +16,14 @@
 # under the License.
 
 set(THIRDPARTY_LOG_OPTIONS
-    LOG_CONFIGURE
-    1
-    LOG_BUILD
-    1
-    LOG_INSTALL
-    1
-    LOG_DOWNLOAD
-    1)
+        LOG_CONFIGURE
+        1
+        LOG_BUILD
+        1
+        LOG_INSTALL
+        1
+        LOG_DOWNLOAD
+        1)
 set(THIRDPARTY_CONFIGURE_COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}")
 if(CMAKE_GENERATOR_TOOLSET)
     list(APPEND THIRDPARTY_CONFIGURE_COMMAND -T "${CMAKE_GENERATOR_TOOLSET}")
@@ -32,7 +32,7 @@ endif()
 string(TOUPPER ${CMAKE_BUILD_TYPE} UPPERCASE_BUILD_TYPE)
 
 set(EP_COMMON_TOOLCHAIN "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
-                        "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
+        "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
 
 macro(set_urls URLS)
     set(${URLS} ${ARGN})
@@ -44,9 +44,9 @@ file(STRINGS "${THIRDPARTY_DIR}/versions.txt" TOOLCHAIN_VERSIONS_TXT)
 foreach(_VERSION_ENTRY ${TOOLCHAIN_VERSIONS_TXT})
     # Exclude comments
     if(NOT
-       ((_VERSION_ENTRY MATCHES "^[^#][A-Za-z0-9-_]+_VERSION=")
-        OR (_VERSION_ENTRY MATCHES "^[^#][A-Za-z0-9-_]+_CHECKSUM=")
-        OR (_VERSION_ENTRY MATCHES "^[^#][A-Za-z0-9-_]+_PKG_NAME=")))
+    ((_VERSION_ENTRY MATCHES "^[^#][A-Za-z0-9-_]+_VERSION=")
+            OR (_VERSION_ENTRY MATCHES "^[^#][A-Za-z0-9-_]+_CHECKSUM=")
+            OR (_VERSION_ENTRY MATCHES "^[^#][A-Za-z0-9-_]+_PKG_NAME=")))
         continue()
     endif()
 
@@ -79,11 +79,11 @@ endif()
 if(DEFINED ENV{PAIMON_ARROW_URL})
     set(ARROW_SOURCE_URL "$ENV{PAIMON_ARROW_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_ARROW_PKG_NAME}")
+    if(DEFINED PAIMON_ARROW_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_ARROW_PKG_NAME}")
         set_urls(ARROW_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_ARROW_PKG_NAME}")
     else()
         set_urls(ARROW_SOURCE_URL
-                 "${THIRDPARTY_MIRROR_URL}https://github.com/apache/arrow/releases/download/apache-arrow-${PAIMON_ARROW_BUILD_VERSION}/apache-arrow-${PAIMON_ARROW_BUILD_VERSION}.tar.gz"
+                "${THIRDPARTY_MIRROR_URL}https://github.com/apache/arrow/releases/download/apache-arrow-${PAIMON_ARROW_BUILD_VERSION}/apache-arrow-${PAIMON_ARROW_BUILD_VERSION}.tar.gz"
         )
     endif()
 endif()
@@ -91,11 +91,11 @@ endif()
 if(DEFINED ENV{PAIMON_RAPIDJSON_URL})
     set(RAPIDJSON_SOURCE_URL "$ENV{PAIMON_RAPIDJSON_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_RAPIDJSON_PKG_NAME}")
+    if(DEFINED PAIMON_RAPIDJSON_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_RAPIDJSON_PKG_NAME}")
         set_urls(RAPIDJSON_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_RAPIDJSON_PKG_NAME}")
     else()
         set_urls(RAPIDJSON_SOURCE_URL
-                 "${THIRDPARTY_MIRROR_URL}https://github.com/miloyip/rapidjson/archive/${PAIMON_RAPIDJSON_BUILD_VERSION}.tar.gz"
+                "${THIRDPARTY_MIRROR_URL}https://github.com/miloyip/rapidjson/archive/${PAIMON_RAPIDJSON_BUILD_VERSION}.tar.gz"
         )
     endif()
 endif()
@@ -103,11 +103,11 @@ endif()
 if(DEFINED ENV{PAIMON_FMT_URL})
     set(FMT_SOURCE_URL "$ENV{PAIMON_FMT_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_FMT_PKG_NAME}")
+    if(DEFINED PAIMON_FMT_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_FMT_PKG_NAME}")
         set_urls(FMT_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_FMT_PKG_NAME}")
     else()
         set_urls(FMT_SOURCE_URL
-                 "${THIRDPARTY_MIRROR_URL}https://github.com/fmtlib/fmt/archive/refs/tags/${PAIMON_FMT_BUILD_VERSION}.tar.gz"
+                "${THIRDPARTY_MIRROR_URL}https://github.com/fmtlib/fmt/archive/refs/tags/${PAIMON_FMT_BUILD_VERSION}.tar.gz"
         )
     endif()
 endif()
@@ -127,11 +127,11 @@ endif()
 if(DEFINED ENV{PAIMON_GLOG_URL})
     set(GLOG_SOURCE_URL "$ENV{PAIMON_GLOG_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_GLOG_PKG_NAME}")
+    if(DEFINED PAIMON_GLOG_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_GLOG_PKG_NAME}")
         set_urls(GLOG_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_GLOG_PKG_NAME}")
     else()
         set_urls(GLOG_SOURCE_URL
-                 "${THIRDPARTY_MIRROR_URL}https://github.com/google/glog/archive/${PAIMON_GLOG_BUILD_VERSION}.tar.gz"
+                "${THIRDPARTY_MIRROR_URL}https://github.com/google/glog/archive/${PAIMON_GLOG_BUILD_VERSION}.tar.gz"
         )
     endif()
 endif()
@@ -139,11 +139,11 @@ endif()
 if(DEFINED ENV{PAIMON_ZLIB_URL})
     set(ZLIB_SOURCE_URL "$ENV{PAIMON_ZLIB_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_ZLIB_PKG_NAME}")
+    if(DEFINED PAIMON_ZLIB_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_ZLIB_PKG_NAME}")
         set_urls(ZLIB_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_ZLIB_PKG_NAME}")
     else()
         set_urls(ZLIB_SOURCE_URL
-                 "${THIRDPARTY_MIRROR_URL}https://github.com/madler/zlib/releases/download/v${PAIMON_ZLIB_BUILD_VERSION}/zlib-${PAIMON_ZLIB_BUILD_VERSION}.tar.gz"
+                "${THIRDPARTY_MIRROR_URL}https://github.com/madler/zlib/releases/download/v${PAIMON_ZLIB_BUILD_VERSION}/zlib-${PAIMON_ZLIB_BUILD_VERSION}.tar.gz"
         )
     endif()
 endif()
@@ -151,11 +151,11 @@ endif()
 if(DEFINED ENV{PAIMON_ZSTD_URL})
     set(ZSTD_SOURCE_URL "$ENV{PAIMON_ZSTD_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_ZSTD_PKG_NAME}")
+    if(DEFINED PAIMON_ZSTD_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_ZSTD_PKG_NAME}")
         set_urls(ZSTD_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_ZSTD_PKG_NAME}")
     else()
         set_urls(ZSTD_SOURCE_URL
-                 "${THIRDPARTY_MIRROR_URL}https://github.com/facebook/zstd/releases/download/v${PAIMON_ZSTD_BUILD_VERSION}/zstd-${PAIMON_ZSTD_BUILD_VERSION}.tar.gz"
+                "${THIRDPARTY_MIRROR_URL}https://github.com/facebook/zstd/releases/download/v${PAIMON_ZSTD_BUILD_VERSION}/zstd-${PAIMON_ZSTD_BUILD_VERSION}.tar.gz"
         )
     endif()
 endif()
@@ -163,11 +163,11 @@ endif()
 if(DEFINED ENV{PAIMON_LZ4_URL})
     set(LZ4_SOURCE_URL "$ENV{PAIMON_LZ4_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_LZ4_PKG_NAME}")
+    if(DEFINED PAIMON_LZ4_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_LZ4_PKG_NAME}")
         set_urls(LZ4_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_LZ4_PKG_NAME}")
     else()
         set_urls(LZ4_SOURCE_URL
-                 "${THIRDPARTY_MIRROR_URL}https://github.com/lz4/lz4/archive/${PAIMON_LZ4_BUILD_VERSION}.tar.gz"
+                "${THIRDPARTY_MIRROR_URL}https://github.com/lz4/lz4/archive/${PAIMON_LZ4_BUILD_VERSION}.tar.gz"
         )
     endif()
 endif()
@@ -175,11 +175,11 @@ endif()
 if(DEFINED ENV{PAIMON_SNAPPY_URL})
     set(SNAPPY_SOURCE_URL "$ENV{PAIMON_SNAPPY_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_SNAPPY_PKG_NAME}")
+    if(DEFINED PAIMON_SNAPPY_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_SNAPPY_PKG_NAME}")
         set_urls(SNAPPY_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_SNAPPY_PKG_NAME}")
     else()
         set_urls(SNAPPY_SOURCE_URL
-                 "${THIRDPARTY_MIRROR_URL}https://github.com/google/snappy/archive/${PAIMON_SNAPPY_BUILD_VERSION}.tar.gz"
+                "${THIRDPARTY_MIRROR_URL}https://github.com/google/snappy/archive/${PAIMON_SNAPPY_BUILD_VERSION}.tar.gz"
         )
     endif()
 endif()
@@ -187,11 +187,11 @@ endif()
 if(DEFINED ENV{PAIMON_PROTOBUF_URL})
     set(PROTOBUF_SOURCE_URL "$ENV{PAIMON_PROTOBUF_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_PROTOBUF_PKG_NAME}")
+    if(DEFINED PAIMON_PROTOBUF_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_PROTOBUF_PKG_NAME}")
         set_urls(PROTOBUF_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_PROTOBUF_PKG_NAME}")
     else()
         set_urls(PROTOBUF_SOURCE_URL
-                 "${THIRDPARTY_MIRROR_URL}https://github.com/protocolbuffers/protobuf/releases/download/v${PAIMON_PROTOBUF_BUILD_VERSION}/protobuf-all-${PAIMON_PROTOBUF_BUILD_VERSION}.tar.gz"
+                "${THIRDPARTY_MIRROR_URL}https://github.com/protocolbuffers/protobuf/releases/download/v${PAIMON_PROTOBUF_BUILD_VERSION}/protobuf-all-${PAIMON_PROTOBUF_BUILD_VERSION}.tar.gz"
         )
     endif()
 endif()
@@ -199,11 +199,11 @@ endif()
 if(DEFINED ENV{PAIMON_GTEST_URL})
     set(GTEST_SOURCE_URL "$ENV{PAIMON_GTEST_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_GTEST_PKG_NAME}")
+    if(DEFINED PAIMON_GTEST_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_GTEST_PKG_NAME}")
         set_urls(GTEST_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_GTEST_PKG_NAME}")
     else()
         set_urls(GTEST_SOURCE_URL
-                 "${THIRDPARTY_MIRROR_URL}https://github.com/google/googletest/archive/release-${PAIMON_GTEST_BUILD_VERSION}.tar.gz"
+                "${THIRDPARTY_MIRROR_URL}https://github.com/google/googletest/archive/release-${PAIMON_GTEST_BUILD_VERSION}.tar.gz"
         )
     endif()
 endif()
@@ -211,11 +211,11 @@ endif()
 if(DEFINED ENV{PAIMON_TBB_URL})
     set(TBB_SOURCE_URL "$ENV{PAIMON_TBB_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_TBB_PKG_NAME}")
+    if(DEFINED PAIMON_TBB_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_TBB_PKG_NAME}")
         set_urls(TBB_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_TBB_PKG_NAME}")
     else()
         set_urls(TBB_SOURCE_URL
-                 "${THIRDPARTY_MIRROR_URL}https://github.com/uxlfoundation/oneTBB/archive/refs/tags/${PAIMON_TBB_BUILD_VERSION}.tar.gz"
+                "${THIRDPARTY_MIRROR_URL}https://github.com/uxlfoundation/oneTBB/archive/refs/tags/${PAIMON_TBB_BUILD_VERSION}.tar.gz"
         )
     endif()
 endif()
@@ -223,11 +223,11 @@ endif()
 if(DEFINED ENV{PAIMON_ORC_URL})
     set(ORC_SOURCE_URL "$ENV{PAIMON_ORC_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_ORC_PKG_NAME}")
+    if(DEFINED PAIMON_ORC_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_ORC_PKG_NAME}")
         set_urls(ORC_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_ORC_PKG_NAME}")
     else()
         set_urls(ORC_SOURCE_URL
-                 "${THIRDPARTY_MIRROR_URL}https://github.com/apache/orc/archive/refs/tags/${PAIMON_ORC_BUILD_VERSION}.tar.gz"
+                "${THIRDPARTY_MIRROR_URL}https://github.com/apache/orc/archive/refs/tags/${PAIMON_ORC_BUILD_VERSION}.tar.gz"
         )
     endif()
 endif()
@@ -235,11 +235,11 @@ endif()
 if(DEFINED ENV{PAIMON_AVRO_URL})
     set(AVRO_SOURCE_URL "$ENV{PAIMON_AVRO_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_AVRO_PKG_NAME}")
+    if(DEFINED PAIMON_AVRO_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_AVRO_PKG_NAME}")
         set_urls(AVRO_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_AVRO_PKG_NAME}")
     else()
         set_urls(AVRO_SOURCE_URL
-                 "${THIRDPARTY_MIRROR_URL}https://github.com/apache/avro/archive/${PAIMON_AVRO_BUILD_VERSION}.tar.gz"
+                "${THIRDPARTY_MIRROR_URL}https://github.com/apache/avro/archive/${PAIMON_AVRO_BUILD_VERSION}.tar.gz"
         )
     endif()
 endif()
@@ -247,11 +247,11 @@ endif()
 if(DEFINED ENV{PAIMON_JINDOSDK_C_URL})
     set(JINDOSDK_C_SOURCE_URL "$ENV{PAIMON_JINDOSDK_C_URL}")
 else()
-    if(EXISTS "${THIRDPARTY_DIR}/${PAIMON_JINDOSDK_C_PKG_NAME}")
+    if(DEFINED PAIMON_JINDOSDK_C_PKG_NAME AND EXISTS "${THIRDPARTY_DIR}/${PAIMON_JINDOSDK_C_PKG_NAME}")
         set_urls(JINDOSDK_C_SOURCE_URL "${THIRDPARTY_DIR}/${PAIMON_JINDOSDK_C_PKG_NAME}")
     else()
         set_urls(JINDOSDK_C_SOURCE_URL
-                 "https://jindodata-binary.oss-cn-shanghai.aliyuncs.com/release/${PAIMON_JINDOSDK_C_BUILD_VERSION}/jindosdk-${PAIMON_JINDOSDK_C_BUILD_VERSION}-linux.tar.gz"
+                "https://jindodata-binary.oss-cn-shanghai.aliyuncs.com/release/${PAIMON_JINDOSDK_C_BUILD_VERSION}/jindosdk-${PAIMON_JINDOSDK_C_BUILD_VERSION}-linux.tar.gz"
         )
     endif()
 endif()
@@ -263,7 +263,7 @@ string(REPLACE "-Wglobal-constructors" "" EP_C_FLAGS ${EP_C_FLAGS})
 if(NOT MSVC_TOOLCHAIN)
     # Set -fPIC on all external projects
     string(APPEND EP_CXX_FLAGS
-           " -fPIC -Wno-error -Wno-sign-compare -Wno-ignored-attributes")
+            " -fPIC -Wno-error -Wno-sign-compare -Wno-ignored-attributes")
     string(APPEND EP_C_FLAGS " -fPIC")
 endif()
 
@@ -278,14 +278,14 @@ endif()
 # encountered. This requires that `EP_COMMON_CMAKE_ARGS` is always the first
 # argument.
 set(EP_COMMON_CMAKE_ARGS
-    ${EP_COMMON_TOOLCHAIN}
-    -DBUILD_SHARED_LIBS=OFF
-    -DBUILD_STATIC_LIBS=ON
-    -DBUILD_TESTING=OFF
-    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-    -DCMAKE_CXX_FLAGS=${EP_CXX_FLAGS}
-    -DCMAKE_C_FLAGS=${EP_C_FLAGS}
-    -DCMAKE_INSTALL_LIBDIR=lib)
+        ${EP_COMMON_TOOLCHAIN}
+        -DBUILD_SHARED_LIBS=OFF
+        -DBUILD_STATIC_LIBS=ON
+        -DBUILD_TESTING=OFF
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_CXX_FLAGS=${EP_CXX_FLAGS}
+        -DCMAKE_C_FLAGS=${EP_C_FLAGS}
+        -DCMAKE_INSTALL_LIBDIR=lib)
 
 macro(build_lucene)
     message(STATUS "Building lucene from source")
@@ -385,17 +385,17 @@ macro(build_rapidjson)
     message(STATUS "Building RapidJSON from source")
     set(RAPIDJSON_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/rapidjson_ep-install")
     set(RAPIDJSON_CMAKE_ARGS
-        ${EP_COMMON_CMAKE_ARGS}
-        -DRAPIDJSON_BUILD_DOC=OFF
-        -DRAPIDJSON_BUILD_EXAMPLES=OFF
-        -DRAPIDJSON_BUILD_TESTS=OFF
-        "-DCMAKE_INSTALL_PREFIX=${RAPIDJSON_PREFIX}")
+            ${EP_COMMON_CMAKE_ARGS}
+            -DRAPIDJSON_BUILD_DOC=OFF
+            -DRAPIDJSON_BUILD_EXAMPLES=OFF
+            -DRAPIDJSON_BUILD_TESTS=OFF
+            "-DCMAKE_INSTALL_PREFIX=${RAPIDJSON_PREFIX}")
 
     externalproject_add(rapidjson_ep
-                        ${EP_COMMON_OPTIONS}
-                        URL ${RAPIDJSON_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_RAPIDJSON_BUILD_SHA256_CHECKSUM}"
-                        CMAKE_ARGS ${RAPIDJSON_CMAKE_ARGS})
+            ${EP_COMMON_OPTIONS}
+            URL ${RAPIDJSON_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_RAPIDJSON_BUILD_SHA256_CHECKSUM}"
+            CMAKE_ARGS ${RAPIDJSON_CMAKE_ARGS})
 
     set(RAPIDJSON_INCLUDE_DIR "${RAPIDJSON_PREFIX}/include")
     # The include directory must exist before it is referenced by a target.
@@ -418,7 +418,7 @@ macro(build_fmt)
     endif()
     set(FMT_STATIC_LIB_NAME fmt)
     set(FMT_STATIC_LIB
-        "${FMT_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${FMT_STATIC_LIB_NAME}${FMT_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${FMT_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${FMT_STATIC_LIB_NAME}${FMT_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(FMT_LIBRARIES ${FMT_STATIC_LIB})
     set(FMT_CMAKE_CXX_FLAGS "${EP_CXX_FLAGS} -Wno-error")
@@ -426,18 +426,18 @@ macro(build_fmt)
     string(REPLACE "-Werror" "" FMT_CMAKE_CXX_FLAGS ${FMT_CMAKE_CXX_FLAGS})
 
     set(FMT_CMAKE_ARGS
-        ${EP_COMMON_CMAKE_ARGS}
-        -DCMAKE_INSTALL_PREFIX=${FMT_PREFIX}
-        "-DCMAKE_CXX_FLAGS=${FMT_CMAKE_CXX_FLAGS}"
-        "-DCMAKE_C_FLAGS=${FMT_CMAKE_C_FLAGS}"
-        -DFMT_TEST=OFF
-        -DFMT_DOC=OFF)
+            ${EP_COMMON_CMAKE_ARGS}
+            -DCMAKE_INSTALL_PREFIX=${FMT_PREFIX}
+            "-DCMAKE_CXX_FLAGS=${FMT_CMAKE_CXX_FLAGS}"
+            "-DCMAKE_C_FLAGS=${FMT_CMAKE_C_FLAGS}"
+            -DFMT_TEST=OFF
+            -DFMT_DOC=OFF)
     set(FMT_CONFIGURE CMAKE_ARGS ${FMT_CMAKE_ARGS})
     externalproject_add(fmt_ep
-                        URL ${FMT_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_FMT_BUILD_SHA256_CHECKSUM}"
-                        ${FMT_CONFIGURE} ${THIRDPARTY_LOG_OPTIONS}
-                        BUILD_BYPRODUCTS ${FMT_STATIC_LIB})
+            URL ${FMT_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_FMT_BUILD_SHA256_CHECKSUM}"
+            ${FMT_CONFIGURE} ${THIRDPARTY_LOG_OPTIONS}
+            BUILD_BYPRODUCTS ${FMT_STATIC_LIB})
 
     file(MAKE_DIRECTORY "${FMT_INCLUDE_DIR}")
 
@@ -546,17 +546,17 @@ macro(build_snappy)
     set(SNAPPY_HOME "${CMAKE_CURRENT_BINARY_DIR}/snappy_ep-install")
     set(SNAPPY_INCLUDE_DIR "${SNAPPY_HOME}/include")
     set(SNAPPY_STATIC_LIB
-        "${SNAPPY_HOME}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}snappy${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${SNAPPY_HOME}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}snappy${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(SNAPPY_LIBRARIES ${SNAPPY_STATIC_LIB})
     set(SNAPPY_CMAKE_ARGS ${EP_COMMON_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${SNAPPY_HOME}
-                          -DSNAPPY_BUILD_TESTS=OFF -DSNAPPY_BUILD_BENCHMARKS=OFF)
+            -DSNAPPY_BUILD_TESTS=OFF -DSNAPPY_BUILD_BENCHMARKS=OFF)
 
     externalproject_add(snappy_ep
-                        URL ${SNAPPY_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_SNAPPY_BUILD_SHA256_CHECKSUM}"
-                        CMAKE_ARGS ${SNAPPY_CMAKE_ARGS} ${THIRDPARTY_LOG_OPTIONS}
-                        BUILD_BYPRODUCTS "${SNAPPY_STATIC_LIB}")
+            URL ${SNAPPY_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_SNAPPY_BUILD_SHA256_CHECKSUM}"
+            CMAKE_ARGS ${SNAPPY_CMAKE_ARGS} ${THIRDPARTY_LOG_OPTIONS}
+            BUILD_BYPRODUCTS "${SNAPPY_STATIC_LIB}")
 
     file(MAKE_DIRECTORY "${SNAPPY_INCLUDE_DIR}")
 
@@ -573,16 +573,16 @@ macro(build_zlib)
     set(ZLIB_INCLUDE_DIR "${ZLIB_PREFIX}/include")
     set(ZLIB_STATIC_LIB_NAME z)
     set(ZLIB_STATIC_LIB
-        "${ZLIB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${ZLIB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(ZLIB_LIBRARIES ${ZLIB_STATIC_LIB})
     set(ZLIB_CMAKE_ARGS ${EP_COMMON_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${ZLIB_PREFIX})
 
     externalproject_add(zlib_ep
-                        URL ${ZLIB_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_ZLIB_BUILD_SHA256_CHECKSUM}"
-                        CMAKE_ARGS ${ZLIB_CMAKE_ARGS} ${THIRDPARTY_LOG_OPTIONS}
-                        BUILD_BYPRODUCTS "${ZLIB_STATIC_LIB}")
+            URL ${ZLIB_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_ZLIB_BUILD_SHA256_CHECKSUM}"
+            CMAKE_ARGS ${ZLIB_CMAKE_ARGS} ${THIRDPARTY_LOG_OPTIONS}
+            BUILD_BYPRODUCTS "${ZLIB_STATIC_LIB}")
 
     file(MAKE_DIRECTORY "${ZLIB_INCLUDE_DIR}")
 
@@ -599,7 +599,7 @@ macro(build_zstd)
     set(ZSTD_INCLUDE_DIR "${ZSTD_PREFIX}/include")
     set(ZSTD_STATIC_LIB_NAME zstd)
     set(ZSTD_STATIC_LIB
-        "${ZSTD_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${ZSTD_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${ZSTD_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${ZSTD_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(ZSTD_LIBRARIES ${ZSTD_STATIC_LIB})
     set(ZSTD_CMAKE_CXX_FLAGS "${EP_CXX_FLAGS} -Wno-error")
@@ -607,19 +607,19 @@ macro(build_zstd)
     string(REPLACE "-Werror" "" ZSTD_CMAKE_CXX_FLAGS ${ZSTD_CMAKE_CXX_FLAGS})
 
     set(ZSTD_CMAKE_ARGS
-        ${EP_COMMON_CMAKE_ARGS}
-        -DCMAKE_INSTALL_PREFIX=${ZSTD_PREFIX}
-        "-DCMAKE_CXX_FLAGS=${ZSTD_CMAKE_CXX_FLAGS}"
-        "-DCMAKE_C_FLAGS=${ZSTD_CMAKE_C_FLAGS}"
-        -DZSTD_BUILD_SHARED=OFF
-        -DZSTD_BUILD_PROGRAMS=OFF)
+            ${EP_COMMON_CMAKE_ARGS}
+            -DCMAKE_INSTALL_PREFIX=${ZSTD_PREFIX}
+            "-DCMAKE_CXX_FLAGS=${ZSTD_CMAKE_CXX_FLAGS}"
+            "-DCMAKE_C_FLAGS=${ZSTD_CMAKE_C_FLAGS}"
+            -DZSTD_BUILD_SHARED=OFF
+            -DZSTD_BUILD_PROGRAMS=OFF)
 
     set(ZSTD_CONFIGURE SOURCE_SUBDIR "build/cmake" CMAKE_ARGS ${ZSTD_CMAKE_ARGS})
     externalproject_add(zstd_ep
-                        URL ${ZSTD_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_ZSTD_BUILD_SHA256_CHECKSUM}"
-                        ${ZSTD_CONFIGURE} ${THIRDPARTY_LOG_OPTIONS}
-                        BUILD_BYPRODUCTS ${ZSTD_STATIC_LIB})
+            URL ${ZSTD_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_ZSTD_BUILD_SHA256_CHECKSUM}"
+            ${ZSTD_CONFIGURE} ${THIRDPARTY_LOG_OPTIONS}
+            BUILD_BYPRODUCTS ${ZSTD_STATIC_LIB})
 
     file(MAKE_DIRECTORY "${ZSTD_INCLUDE_DIR}")
 
@@ -635,18 +635,18 @@ macro(build_lz4)
     set(LZ4_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/lz4_ep-install")
     set(LZ4_INCLUDE_DIR "${LZ4_PREFIX}/include")
     set(LZ4_STATIC_LIB
-        "${LZ4_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${LZ4_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(LZ4_LIBRARIES ${LZ4_STATIC_LIB})
     set(LZ4_CMAKE_ARGS ${EP_COMMON_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${LZ4_PREFIX}
-                       -DLZ4_BUILD_CLI=OFF -DLZ4_BUILD_LEGACY_LZ4C=OFF)
+            -DLZ4_BUILD_CLI=OFF -DLZ4_BUILD_LEGACY_LZ4C=OFF)
 
     set(LZ4_CONFIGURE SOURCE_SUBDIR "build/cmake" CMAKE_ARGS ${LZ4_CMAKE_ARGS})
     externalproject_add(lz4_ep
-                        URL ${LZ4_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_LZ4_BUILD_SHA256_CHECKSUM}"
-                        ${LZ4_CONFIGURE} ${THIRDPARTY_LOG_OPTIONS}
-                        BUILD_BYPRODUCTS ${LZ4_STATIC_LIB})
+            URL ${LZ4_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_LZ4_BUILD_SHA256_CHECKSUM}"
+            ${LZ4_CONFIGURE} ${THIRDPARTY_LOG_OPTIONS}
+            BUILD_BYPRODUCTS ${LZ4_STATIC_LIB})
 
     file(MAKE_DIRECTORY "${LZ4_INCLUDE_DIR}")
 
@@ -668,16 +668,16 @@ macro(build_jindosdk_c)
 
     # Extract and install jindosdk from precompiled package
     externalproject_add(jindosdk_ep
-                        URL ${JINDOSDK_C_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_JINDOSDK_C_BUILD_SHA256_CHECKSUM}"
-                        ${THIRDPARTY_LOG_OPTIONS}
-                        CONFIGURE_COMMAND ""
-                        BUILD_COMMAND ""
-                        INSTALL_COMMAND bash -c
-                                        "cp -r <SOURCE_DIR>/include/* ${JINDOSDK_C_INCLUDE_DIR}"
-                        COMMAND bash -c
-                                "cp -r <SOURCE_DIR>/lib/native/libjindosdk_c.so* ${JINDOSDK_C_LIB_DIR}"
-                        BUILD_BYPRODUCTS "${JINDOSDK_C_DYNAMIC_LIB}")
+            URL ${JINDOSDK_C_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_JINDOSDK_C_BUILD_SHA256_CHECKSUM}"
+            ${THIRDPARTY_LOG_OPTIONS}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ""
+            INSTALL_COMMAND bash -c
+            "cp -r <SOURCE_DIR>/include/* ${JINDOSDK_C_INCLUDE_DIR}"
+            COMMAND bash -c
+            "cp -r <SOURCE_DIR>/lib/native/libjindosdk_c.so* ${JINDOSDK_C_LIB_DIR}"
+            BUILD_BYPRODUCTS "${JINDOSDK_C_DYNAMIC_LIB}")
 
     # The include directory must exist before it is referenced by a target.
     file(MAKE_DIRECTORY "${JINDOSDK_C_INCLUDE_DIR}")
@@ -685,9 +685,9 @@ macro(build_jindosdk_c)
 
     add_library(jindosdk::c_sdk SHARED IMPORTED)
     set_target_properties(jindosdk::c_sdk
-                          PROPERTIES IMPORTED_LOCATION "${JINDOSDK_C_DYNAMIC_LIB}"
-                                     INTERFACE_INCLUDE_DIRECTORIES
-                                     "${JINDOSDK_C_INCLUDE_DIR}")
+            PROPERTIES IMPORTED_LOCATION "${JINDOSDK_C_DYNAMIC_LIB}"
+            INTERFACE_INCLUDE_DIRECTORIES
+            "${JINDOSDK_C_INCLUDE_DIR}")
     list(APPEND JINDOSDK_INCLUDE_DIR ${JINDOSDK_C_INCLUDE_DIR})
 
     add_dependencies(jindosdk::c_sdk jindosdk_ep)
@@ -702,17 +702,17 @@ macro(build_jindosdk_nextarch)
     message(STATUS "Building jindosdk-nextarch from local source")
 
     set(JINDOSDK_NEXTARCH_PREFIX
-        "${CMAKE_CURRENT_BINARY_DIR}/jindosdk-nextarch_ep-install")
+            "${CMAKE_CURRENT_BINARY_DIR}/jindosdk-nextarch_ep-install")
     set(JINDOSDK_NEXTARCH_HOME "${JINDOSDK_NEXTARCH_PREFIX}")
     set(JINDOSDK_NEXTARCH_INCLUDE_DIR "${JINDOSDK_NEXTARCH_PREFIX}/include")
     set(JINDOSDK_NEXTARCH_LIB_DIR "${JINDOSDK_NEXTARCH_PREFIX}/lib")
     set(JINDOSDK_NEXTARCH_SOURCE_DIR "${CMAKE_SOURCE_DIR}/third_party/jindosdk-nextarch")
     set(JINDOSDK_NEXTARCH_STATIC_LIB
-        "${JINDOSDK_NEXTARCH_LIB_DIR}/libjindosdk-nextarch.a")
+            "${JINDOSDK_NEXTARCH_LIB_DIR}/libjindosdk-nextarch.a")
 
     # Get jindosdk dependencies (headers and dynamic library)
     get_target_property(JINDOSDK_C_INCLUDE_DIR jindosdk::c_sdk
-                        INTERFACE_INCLUDE_DIRECTORIES)
+            INTERFACE_INCLUDE_DIRECTORIES)
     get_target_property(JINDOSDK_C_LIBRARY_LOCATION jindosdk::c_sdk IMPORTED_LOCATION)
     get_filename_component(JINDOSDK_C_DIR_ROOT "${JINDOSDK_C_INCLUDE_DIR}" DIRECTORY)
 
@@ -720,17 +720,17 @@ macro(build_jindosdk_nextarch)
     set(JINDOSDK_NEXTARCH_CMAKE_CXX_FLAGS "${EP_CXX_FLAGS}")
     set(JINDOSDK_NEXTARCH_CMAKE_C_FLAGS "${EP_C_FLAGS}")
     set(JINDOSDK_NEXTARCH_CMAKE_ARGS
-        ${EP_COMMON_CMAKE_ARGS}
-        "-DCMAKE_INSTALL_PREFIX=${JINDOSDK_NEXTARCH_PREFIX}"
-        "-DCMAKE_CXX_FLAGS=${JINDOSDK_NEXTARCH_CMAKE_CXX_FLAGS}"
-        "-DCMAKE_C_FLAGS=${JINDOSDK_NEXTARCH_CMAKE_C_FLAGS}"
-        -DJINDOSDK_ROOT=${JINDOSDK_C_DIR_ROOT})
+            ${EP_COMMON_CMAKE_ARGS}
+            "-DCMAKE_INSTALL_PREFIX=${JINDOSDK_NEXTARCH_PREFIX}"
+            "-DCMAKE_CXX_FLAGS=${JINDOSDK_NEXTARCH_CMAKE_CXX_FLAGS}"
+            "-DCMAKE_C_FLAGS=${JINDOSDK_NEXTARCH_CMAKE_C_FLAGS}"
+            -DJINDOSDK_ROOT=${JINDOSDK_C_DIR_ROOT})
 
     externalproject_add(jindosdk-nextarch_ep
-                        SOURCE_DIR ${JINDOSDK_NEXTARCH_SOURCE_DIR}
-                        CMAKE_ARGS ${JINDOSDK_NEXTARCH_CMAKE_ARGS}
-                        BUILD_BYPRODUCTS "${JINDOSDK_NEXTARCH_STATIC_LIB}"
-                        DEPENDS jindosdk::c_sdk ${THIRDPARTY_LOG_OPTIONS})
+            SOURCE_DIR ${JINDOSDK_NEXTARCH_SOURCE_DIR}
+            CMAKE_ARGS ${JINDOSDK_NEXTARCH_CMAKE_ARGS}
+            BUILD_BYPRODUCTS "${JINDOSDK_NEXTARCH_STATIC_LIB}"
+            DEPENDS jindosdk::c_sdk ${THIRDPARTY_LOG_OPTIONS})
 
     # The include directory must exist before it is referenced by a target.
     file(MAKE_DIRECTORY "${JINDOSDK_NEXTARCH_INCLUDE_DIR}")
@@ -738,9 +738,9 @@ macro(build_jindosdk_nextarch)
 
     add_library(jindosdk::nextarch STATIC IMPORTED)
     set_target_properties(jindosdk::nextarch
-                          PROPERTIES IMPORTED_LOCATION "${JINDOSDK_NEXTARCH_STATIC_LIB}"
-                                     INTERFACE_INCLUDE_DIRECTORIES
-                                     "${JINDOSDK_NEXTARCH_INCLUDE_DIR}")
+            PROPERTIES IMPORTED_LOCATION "${JINDOSDK_NEXTARCH_STATIC_LIB}"
+            INTERFACE_INCLUDE_DIRECTORIES
+            "${JINDOSDK_NEXTARCH_INCLUDE_DIR}")
     target_link_libraries(jindosdk::nextarch INTERFACE jindosdk::c_sdk pthread dl)
     list(APPEND JINDOSDK_INCLUDE_DIR ${JINDOSDK_NEXTARCH_INCLUDE_DIR})
 
@@ -752,17 +752,17 @@ macro(build_protobuf)
     set(PROTOBUF_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/protobuf_ep-install")
     set(PROTOBUF_INCLUDE_DIR "${PROTOBUF_PREFIX}/include")
     set(PROTOBUF_STATIC_LIB
-        "${PROTOBUF_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}protobuf${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${PROTOBUF_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}protobuf${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(PROTOC_STATIC_LIB
-        "${PROTOBUF_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}protoc${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${PROTOBUF_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}protoc${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(PROTOBUF_LIBRARIES ${PROTOBUF_STATIC_LIB})
     set(PROTOBUF_COMPILER "${PROTOBUF_PREFIX}/bin/protoc")
 
     get_target_property(THIRDPARTY_ZLIB_INCLUDE_DIR zlib INTERFACE_INCLUDE_DIRECTORIES)
     get_filename_component(THIRDPARTY_ZLIB_ROOT "${THIRDPARTY_ZLIB_INCLUDE_DIR}"
-                           DIRECTORY)
+            DIRECTORY)
 
     # Strip lto flags (which may be added by dh_auto_configure)
     # See https://github.com/protocolbuffers/protobuf/issues/7092
@@ -773,24 +773,24 @@ macro(build_protobuf)
     string(REPLACE "-flto=auto" "" PROTOBUF_CXX_FLAGS "${PROTOBUF_CXX_FLAGS}")
     string(REPLACE "-ffat-lto-objects" "" PROTOBUF_CXX_FLAGS "${PROTOBUF_CXX_FLAGS}")
     string(APPEND PROTOBUF_CXX_FLAGS
-           " -Wno-inconsistent-missing-override -Wno-unneeded-internal-declaration")
+            " -Wno-inconsistent-missing-override -Wno-unneeded-internal-declaration")
     set(PROTOBUF_CMAKE_ARGS
-        ${EP_COMMON_CMAKE_ARGS}
-        -DCMAKE_INSTALL_PREFIX=${PROTOBUF_PREFIX}
-        "-DCMAKE_CXX_FLAGS=${PROTOBUF_CXX_FLAGS}"
-        "-DCMAKE_C_FLAGS=${PROTOBUF_C_FLAGS}"
-        "-DZLIB_ROOT=${THIRDPARTY_ZLIB_ROOT}"
-        -Dprotobuf_BUILD_TESTS=OFF
-        -Dprotobuf_DEBUG_POSTFIX=)
+            ${EP_COMMON_CMAKE_ARGS}
+            -DCMAKE_INSTALL_PREFIX=${PROTOBUF_PREFIX}
+            "-DCMAKE_CXX_FLAGS=${PROTOBUF_CXX_FLAGS}"
+            "-DCMAKE_C_FLAGS=${PROTOBUF_C_FLAGS}"
+            "-DZLIB_ROOT=${THIRDPARTY_ZLIB_ROOT}"
+            -Dprotobuf_BUILD_TESTS=OFF
+            -Dprotobuf_DEBUG_POSTFIX=)
     set(PROTOBUF_CONFIGURE SOURCE_SUBDIR "cmake" CMAKE_ARGS ${PROTOBUF_CMAKE_ARGS})
 
     externalproject_add(protobuf_ep
-                        URL ${PROTOBUF_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_PROTOBUF_BUILD_SHA256_CHECKSUM}"
-                        ${PROTOBUF_CONFIGURE} ${THIRDPARTY_LOG_OPTIONS}
-                        # BUILD_IN_SOURCE 1
-                        BUILD_BYPRODUCTS "${PROTOBUF_STATIC_LIB}" "${PROTOBUF_COMPILER}"
-                        DEPENDS zlib)
+            URL ${PROTOBUF_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_PROTOBUF_BUILD_SHA256_CHECKSUM}"
+            ${PROTOBUF_CONFIGURE} ${THIRDPARTY_LOG_OPTIONS}
+            # BUILD_IN_SOURCE 1
+            BUILD_BYPRODUCTS "${PROTOBUF_STATIC_LIB}" "${PROTOBUF_COMPILER}"
+            DEPENDS zlib)
 
     file(MAKE_DIRECTORY "${PROTOBUF_INCLUDE_DIR}")
 
@@ -815,7 +815,7 @@ macro(build_avro)
     set(AVRO_INCLUDE_DIR "${AVRO_PREFIX}/include")
     set(AVRO_STATIC_LIB_NAME avrocpp_s)
     set(AVRO_STATIC_LIB
-        "${AVRO_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${AVRO_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${AVRO_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${AVRO_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(AVRO_LIBRARIES ${AVRO_STATIC_LIB})
 
@@ -835,23 +835,23 @@ macro(build_avro)
     set(AVRO_CMAKE_C_FLAGS "${EP_C_FLAGS} -Wno-error")
 
     set(AVRO_CMAKE_ARGS
-        ${EP_COMMON_CMAKE_ARGS}
-        "-DCMAKE_INSTALL_PREFIX=${AVRO_PREFIX}"
-        "-DCMAKE_CXX_FLAGS=${AVRO_CMAKE_CXX_FLAGS}"
-        "-DCMAKE_C_FLAGS=${AVRO_CMAKE_C_FLAGS}"
-        "-DAVRO_BUILD_TESTS=OFF"
-        "-DAVRO_BUILD_EXECUTABLES=OFF"
-        "-DZLIB_ROOT=${AVRO_ZLIB_ROOT}"
-        "-Dfmt_ROOT=${AVRO_FMT_ROOT}"
-        "-Dzstd_ROOT=${AVRO_ZSTD_ROOT}"
-        "-DSnappy_ROOT=${AVRO_SNAPPY_ROOT}")
+            ${EP_COMMON_CMAKE_ARGS}
+            "-DCMAKE_INSTALL_PREFIX=${AVRO_PREFIX}"
+            "-DCMAKE_CXX_FLAGS=${AVRO_CMAKE_CXX_FLAGS}"
+            "-DCMAKE_C_FLAGS=${AVRO_CMAKE_C_FLAGS}"
+            "-DAVRO_BUILD_TESTS=OFF"
+            "-DAVRO_BUILD_EXECUTABLES=OFF"
+            "-DZLIB_ROOT=${AVRO_ZLIB_ROOT}"
+            "-Dfmt_ROOT=${AVRO_FMT_ROOT}"
+            "-Dzstd_ROOT=${AVRO_ZSTD_ROOT}"
+            "-DSnappy_ROOT=${AVRO_SNAPPY_ROOT}")
     externalproject_add(avro_ep
-                        URL ${AVRO_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_AVRO_BUILD_SHA256_CHECKSUM}"
-                        SOURCE_SUBDIR "lang/c++"
-                        CMAKE_ARGS ${AVRO_CMAKE_ARGS}
-                        BUILD_BYPRODUCTS "${AVRO_STATIC_LIB}"
-                        DEPENDS fmt zlib zstd snappy)
+            URL ${AVRO_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_AVRO_BUILD_SHA256_CHECKSUM}"
+            SOURCE_SUBDIR "lang/c++"
+            CMAKE_ARGS ${AVRO_CMAKE_ARGS}
+            BUILD_BYPRODUCTS "${AVRO_STATIC_LIB}"
+            DEPENDS fmt zlib zstd snappy)
 
     file(MAKE_DIRECTORY "${AVRO_INCLUDE_DIR}")
 
@@ -879,7 +879,7 @@ macro(build_orc)
     get_filename_component(ORC_ZLIB_ROOT "${ORC_ZLIB_INCLUDE_DIR}" DIRECTORY)
 
     get_target_property(ORC_PROTOBUF_INCLUDE_DIR libprotobuf
-                        INTERFACE_INCLUDE_DIRECTORIES)
+            INTERFACE_INCLUDE_DIRECTORIES)
     get_filename_component(ORC_PROTOBUF_ROOT "${ORC_PROTOBUF_INCLUDE_DIR}" DIRECTORY)
 
     get_property(PAIMON_RPATH GLOBAL PROPERTY PAIMON_RPATH)
@@ -890,9 +890,9 @@ macro(build_orc)
     string(REPLACE "-Werror" "" EP_CXX_FLAGS ${EP_CXX_FLAGS})
 
     set(ORC_CMAKE_CXX_FLAGS
-        "${EP_CXX_FLAGS} -fPIC -Wno-error ${CMAKE_CXX_FLAGS_${UPPERCASE_BUILD_TYPE}}")
+            "${EP_CXX_FLAGS} -fPIC -Wno-error ${CMAKE_CXX_FLAGS_${UPPERCASE_BUILD_TYPE}}")
     set(ORC_CMAKE_C_FLAGS
-        "${EP_C_FLAGS} -fPIC -Wno-error ${CMAKE_CXX_FLAGS_${UPPERCASE_BUILD_TYPE}}")
+            "${EP_C_FLAGS} -fPIC -Wno-error ${CMAKE_CXX_FLAGS_${UPPERCASE_BUILD_TYPE}}")
 
     set(ORC_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/orc_ep-prefix")
     set(ORC_INCLUDE_DIR "${ORC_PREFIX}/include")
@@ -906,56 +906,56 @@ macro(build_orc)
     message("ORC_CMAKE_C_FLAGS ${ORC_CMAKE_C_FLAGS}")
 
     set(ORC_CMAKE_ARGS
-        ${EP_COMMON_CMAKE_ARGS}
-        "-DCMAKE_INSTALL_PREFIX=${ORC_PREFIX}"
-        "-DCMAKE_CXX_FLAGS=${ORC_CMAKE_CXX_FLAGS}"
-        "-DCMAKE_C_FLAGS=${ORC_CMAKE_C_FLAGS}"
-        "-DCMAKE_CXX_FLAGS_${UPPERCASE_BUILD_TYPE}=${ORC_CMAKE_CXX_FLAGS}"
-        "-DCMAKE_EXE_LINKER_FLAGS=-Wl,-rpath=${ORC_RPATH}"
-        "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-rpath=${ORC_RPATH}"
-        "-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-rpath=${ORC_RPATH}"
-        "-DSNAPPY_HOME=${ORC_SNAPPY_ROOT}"
-        "-DLZ4_HOME=${ORC_LZ4_ROOT}"
-        "-DZSTD_HOME=${ORC_ZSTD_ROOT}"
-        "-DZLIB_HOME=${ORC_ZLIB_ROOT}"
-        "-DPROTOBUF_HOME=${ORC_PROTOBUF_ROOT}"
-        "-DProtobuf_ROOT=${ORC_PROTOBUF_ROOT}"
-        -DBUILD_JAVA=OFF
-        -DBUILD_CPP_TESTS=OFF
-        -DBUILD_TOOLS=OFF
-        -DBUILD_CPP_ENABLE_METRICS=ON)
+            ${EP_COMMON_CMAKE_ARGS}
+            "-DCMAKE_INSTALL_PREFIX=${ORC_PREFIX}"
+            "-DCMAKE_CXX_FLAGS=${ORC_CMAKE_CXX_FLAGS}"
+            "-DCMAKE_C_FLAGS=${ORC_CMAKE_C_FLAGS}"
+            "-DCMAKE_CXX_FLAGS_${UPPERCASE_BUILD_TYPE}=${ORC_CMAKE_CXX_FLAGS}"
+            "-DCMAKE_EXE_LINKER_FLAGS=-Wl,-rpath=${ORC_RPATH}"
+            "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-rpath=${ORC_RPATH}"
+            "-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-rpath=${ORC_RPATH}"
+            "-DSNAPPY_HOME=${ORC_SNAPPY_ROOT}"
+            "-DLZ4_HOME=${ORC_LZ4_ROOT}"
+            "-DZSTD_HOME=${ORC_ZSTD_ROOT}"
+            "-DZLIB_HOME=${ORC_ZLIB_ROOT}"
+            "-DPROTOBUF_HOME=${ORC_PROTOBUF_ROOT}"
+            "-DProtobuf_ROOT=${ORC_PROTOBUF_ROOT}"
+            -DBUILD_JAVA=OFF
+            -DBUILD_CPP_TESTS=OFF
+            -DBUILD_TOOLS=OFF
+            -DBUILD_CPP_ENABLE_METRICS=ON)
 
     set(PATCH_FILE "${CMAKE_CURRENT_LIST_DIR}/orc.diff")
     externalproject_add(orc_ep
-                        URL ${ORC_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_ORC_BUILD_SHA256_CHECKSUM}"
-                        SOURCE_DIR ${ORC_SOURCE_DIR}
-                        BINARY_DIR ${ORC_BUILD_DIR}
-                        CMAKE_ARGS ${ORC_CMAKE_ARGS}
-                        LOG_PATCH ON
-                        PATCH_COMMAND ${CMAKE_COMMAND} -E chdir <SOURCE_DIR> bash -c
-                                      "[ -f .patched ] && echo '<SOURCE_DIR> patch already applied, ignore...' || patch -s -N -p1 -i '${PATCH_FILE}' && touch .patched"
-                        UPDATE_DISCONNECTED 1
-                        BUILD_BYPRODUCTS ${ORC_STATIC_LIB}
-                        DEPENDS zstd
-                                snappy
-                                lz4
-                                zlib
-                                libprotobuf)
+            URL ${ORC_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_ORC_BUILD_SHA256_CHECKSUM}"
+            SOURCE_DIR ${ORC_SOURCE_DIR}
+            BINARY_DIR ${ORC_BUILD_DIR}
+            CMAKE_ARGS ${ORC_CMAKE_ARGS}
+            LOG_PATCH ON
+            PATCH_COMMAND ${CMAKE_COMMAND} -E chdir <SOURCE_DIR> bash -c
+            "[ -f .patched ] && echo '<SOURCE_DIR> patch already applied, ignore...' || patch -s -N -p1 -i '${PATCH_FILE}' && touch .patched"
+            UPDATE_DISCONNECTED 1
+            BUILD_BYPRODUCTS ${ORC_STATIC_LIB}
+            DEPENDS zstd
+            snappy
+            lz4
+            zlib
+            libprotobuf)
 
     # The include directory must exist before it is referenced by a target.
     file(MAKE_DIRECTORY "${ORC_INCLUDE_DIR}")
 
     add_library(orc::orc STATIC IMPORTED)
     set_target_properties(orc::orc
-                          PROPERTIES IMPORTED_LOCATION "${ORC_STATIC_LIB}"
-                                     INTERFACE_INCLUDE_DIRECTORIES "${ORC_INCLUDE_DIR}")
+            PROPERTIES IMPORTED_LOCATION "${ORC_STATIC_LIB}"
+            INTERFACE_INCLUDE_DIRECTORIES "${ORC_INCLUDE_DIR}")
     target_link_libraries(orc::orc
-                          INTERFACE zstd
-                                    snappy
-                                    lz4
-                                    zlib
-                                    libprotobuf)
+            INTERFACE zstd
+            snappy
+            lz4
+            zlib
+            libprotobuf)
 
     add_dependencies(orc::orc orc_ep)
 endmacro()
@@ -974,6 +974,9 @@ macro(build_arrow)
 
     get_target_property(ARROW_ZLIB_INCLUDE_DIR zlib INTERFACE_INCLUDE_DIRECTORIES)
     get_filename_component(ARROW_ZLIB_ROOT "${ARROW_ZLIB_INCLUDE_DIR}" DIRECTORY)
+
+    get_target_property(ARROW_RAPIDJSON_INCLUDE_DIR RapidJSON INTERFACE_INCLUDE_DIRECTORIES)
+    get_filename_component(ARROW_RAPIDJSON_ROOT "${ARROW_RAPIDJSON_INCLUDE_DIR}" DIRECTORY)
 
     set(ARROW_CMAKE_CXX_FLAGS "${EP_CXX_FLAGS} -Wno-error")
     set(ARROW_CMAKE_C_FLAGS "${EP_C_FLAGS} -Wno-error")
@@ -994,109 +997,111 @@ macro(build_arrow)
     set(ARROW_BUILD_DIR "${CMAKE_BINARY_DIR}/arrow")
     string(TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_LOWER)
     set(ARROW_STATIC_LIB
-        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(ARROW_DATASET_STATIC_LIB
-        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow_dataset${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow_dataset${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(ARROW_ACERO_STATIC_LIB
-        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow_acero${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow_acero${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(ARROW_BUNDLED_DEP_STATIC_LIB
-        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow_bundled_dependencies${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow_bundled_dependencies${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(PARQUET_STATIC_LIB
-        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}parquet${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}parquet${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
 
     set(ARROW_CMAKE_ARGS
-        ${EP_COMMON_CMAKE_ARGS}
-        "-DCMAKE_INSTALL_PREFIX=${ARROW_PREFIX}"
-        "-DCMAKE_CXX_FLAGS=${ARROW_CMAKE_CXX_FLAGS}"
-        "-DCMAKE_C_FLAGS=${ARROW_CMAKE_C_FLAGS}"
-        "-DCMAKE_CXX_FLAGS_${UPPERCASE_BUILD_TYPE}=${ARROW_CMAKE_CXX_FLAGS}"
-        -DARROW_DEPENDENCY_USE_SHARED=OFF
-        -DARROW_BUILD_SHARED=OFF
-        -DARROW_BUILD_STATIC=ON
-        -DARROW_BUILD_TESTS=OFF
-        -DARROW_BUILD_BENCHMARKS=OFF
-        -DARROW_BUILD_EXAMPLES=OFF
-        -DARROW_JEMALLOC=OFF
-        -DARROW_WITH_RE2=OFF
-        -DARROW_WITH_UTF8PROC=OFF
-        -DARROW_ORC=OFF
-        -DARROW_SIMD_LEVEL=NONE
-        -DARROW_RUNTIME_SIMD_LEVEL=NONE
-        -DARROW_PARQUET=ON
-        -DARROW_IPC=ON
-        -DARROW_DATASET=ON
-        -DARROW_JSON=ON
-        -DARROW_COMPUTE=ON
-        -DARROW_WITH_SNAPPY=ON
-        -DARROW_WITH_ZLIB=ON
-        -DARROW_WITH_LZ4=ON
-        -DARROW_WITH_ZSTD=ON
-        -DARROW_WITH_BZ2=OFF
-        -DARROW_WITH_BROTLI=ON
-        -DZSTD_ROOT=${ARROW_ZSTD_ROOT}
-        -DZLIB_ROOT=${ARROW_ZLIB_ROOT}
-        -DSnappy_ROOT=${ARROW_SNAPPY_ROOT}
-        -DLZ4_ROOT=${ARROW_LZ4_ROOT})
+            ${EP_COMMON_CMAKE_ARGS}
+            "-DCMAKE_INSTALL_PREFIX=${ARROW_PREFIX}"
+            "-DCMAKE_CXX_FLAGS=${ARROW_CMAKE_CXX_FLAGS}"
+            "-DCMAKE_C_FLAGS=${ARROW_CMAKE_C_FLAGS}"
+            "-DCMAKE_CXX_FLAGS_${UPPERCASE_BUILD_TYPE}=${ARROW_CMAKE_CXX_FLAGS}"
+            -DARROW_DEPENDENCY_USE_SHARED=OFF
+            -DARROW_BUILD_SHARED=OFF
+            -DARROW_BUILD_STATIC=ON
+            -DARROW_BUILD_TESTS=OFF
+            -DARROW_BUILD_BENCHMARKS=OFF
+            -DARROW_BUILD_EXAMPLES=OFF
+            -DARROW_JEMALLOC=OFF
+            -DARROW_WITH_RE2=OFF
+            -DARROW_WITH_UTF8PROC=OFF
+            -DARROW_ORC=OFF
+            -DARROW_SIMD_LEVEL=NONE
+            -DARROW_RUNTIME_SIMD_LEVEL=NONE
+            -DARROW_PARQUET=ON
+            -DARROW_IPC=ON
+            -DARROW_DATASET=ON
+            -DARROW_JSON=ON
+            -DARROW_COMPUTE=ON
+            -DARROW_WITH_SNAPPY=ON
+            -DARROW_WITH_ZLIB=ON
+            -DARROW_WITH_LZ4=ON
+            -DARROW_WITH_ZSTD=ON
+            -DARROW_WITH_BZ2=OFF
+            -DARROW_WITH_BROTLI=ON
+            -DZSTD_ROOT=${ARROW_ZSTD_ROOT}
+            -DZLIB_ROOT=${ARROW_ZLIB_ROOT}
+            -DSnappy_ROOT=${ARROW_SNAPPY_ROOT}
+            -DLZ4_ROOT=${ARROW_LZ4_ROOT}
+            -DRapidJSON_ROOT=${ARROW_RAPIDJSON_ROOT}
+            -DRapidJSON_DIR=${ARROW_RAPIDJSON_ROOT})
 
     set(ARROW_CONFIGURE SOURCE_SUBDIR "cpp" CMAKE_ARGS ${ARROW_CMAKE_ARGS})
     set(PATCH_FILE "${CMAKE_CURRENT_LIST_DIR}/arrow.diff")
     externalproject_add(arrow_ep
-                        URL ${ARROW_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_ARROW_BUILD_SHA256_CHECKSUM}"
-                        LOG_PATCH ON
-                        PATCH_COMMAND ${CMAKE_COMMAND} -E chdir <SOURCE_DIR> bash -c
-                                      "[ -f .patched ] && echo '<SOURCE_DIR> patch already applied, ignore...' || patch -s -N -p1 -i '${PATCH_FILE}' && touch .patched"
-                        GIT_SUBMODULES "" GIT_SUBMODULES_RECURSE FALSE ${ARROW_CONFIGURE}
-                        UPDATE_DISCONNECTED 1
-                        BUILD_BYPRODUCTS "${ARROW_STATIC_LIB}"
-                                         "${ARROW_BUNDLED_DEP_STATIC_LIB}"
-                                         "${PARQUET_STATIC_LIB}"
-                                         "${ARROW_DATASET_STATIC_LIB}"
-                                         "${ARROW_ACERO_STATIC_LIB}"
-                        DEPENDS zstd snappy lz4 zlib)
+            URL ${ARROW_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_ARROW_BUILD_SHA256_CHECKSUM}"
+            LOG_PATCH ON
+            PATCH_COMMAND ${CMAKE_COMMAND} -E chdir <SOURCE_DIR> bash -c
+            "[ -f .patched ] && echo '<SOURCE_DIR> patch already applied, ignore...' || patch -s -N -p1 -i '${PATCH_FILE}' && touch .patched"
+            GIT_SUBMODULES "" GIT_SUBMODULES_RECURSE FALSE ${ARROW_CONFIGURE}
+            UPDATE_DISCONNECTED 1
+            BUILD_BYPRODUCTS "${ARROW_STATIC_LIB}"
+            "${ARROW_BUNDLED_DEP_STATIC_LIB}"
+            "${PARQUET_STATIC_LIB}"
+            "${ARROW_DATASET_STATIC_LIB}"
+            "${ARROW_ACERO_STATIC_LIB}"
+            DEPENDS zstd snappy lz4 zlib rapidjson_ep)
 
     add_library(arrow STATIC IMPORTED)
     set_target_properties(arrow
-                          PROPERTIES IMPORTED_LOCATION "${ARROW_PREFIX}/lib/libarrow.a"
-                                     INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
-                                     INTERFACE_LINK_DIRECTORIES
-                                     "${ARROW_BUILD_DIR}/${CMAKE_BUILD_TYPE_LOWER}")
+            PROPERTIES IMPORTED_LOCATION "${ARROW_PREFIX}/lib/libarrow.a"
+            INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
+            INTERFACE_LINK_DIRECTORIES
+            "${ARROW_BUILD_DIR}/${CMAKE_BUILD_TYPE_LOWER}")
 
     add_library(arrow_dataset STATIC IMPORTED)
     set_target_properties(arrow_dataset
-                          PROPERTIES IMPORTED_LOCATION
-                                     "${ARROW_PREFIX}/lib/libarrow_dataset.a"
-                                     INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
-                                     INTERFACE_LINK_DIRECTORIES
-                                     "${ARROW_BUILD_DIR}/${CMAKE_BUILD_TYPE_LOWER}")
+            PROPERTIES IMPORTED_LOCATION
+            "${ARROW_PREFIX}/lib/libarrow_dataset.a"
+            INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
+            INTERFACE_LINK_DIRECTORIES
+            "${ARROW_BUILD_DIR}/${CMAKE_BUILD_TYPE_LOWER}")
 
     add_library(arrow_acero STATIC IMPORTED)
     set_target_properties(arrow_acero
-                          PROPERTIES IMPORTED_LOCATION
-                                     "${ARROW_PREFIX}/lib/libarrow_acero.a"
-                                     INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
-                                     INTERFACE_LINK_DIRECTORIES
-                                     "${ARROW_BUILD_DIR}/${CMAKE_BUILD_TYPE_LOWER}")
+            PROPERTIES IMPORTED_LOCATION
+            "${ARROW_PREFIX}/lib/libarrow_acero.a"
+            INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
+            INTERFACE_LINK_DIRECTORIES
+            "${ARROW_BUILD_DIR}/${CMAKE_BUILD_TYPE_LOWER}")
 
     add_library(parquet STATIC IMPORTED)
     set_target_properties(parquet
-                          PROPERTIES IMPORTED_LOCATION "${ARROW_PREFIX}/lib/libparquet.a"
-                                     INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
-                                     INTERFACE_LINK_DIRECTORIES
-                                     "${ARROW_BUILD_DIR}/${CMAKE_BUILD_TYPE_LOWER}")
+            PROPERTIES IMPORTED_LOCATION "${ARROW_PREFIX}/lib/libparquet.a"
+            INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
+            INTERFACE_LINK_DIRECTORIES
+            "${ARROW_BUILD_DIR}/${CMAKE_BUILD_TYPE_LOWER}")
 
     add_library(arrow_bundled_dependencies STATIC IMPORTED)
     set_target_properties(arrow_bundled_dependencies
-                          PROPERTIES IMPORTED_LOCATION
-                                     "${ARROW_PREFIX}/lib/libarrow_bundled_dependencies.a"
-                                     INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
-                                     INTERFACE_LINK_DIRECTORIES
-                                     "${ARROW_BUILD_DIR}/${CMAKE_BUILD_TYPE_LOWER}")
+            PROPERTIES IMPORTED_LOCATION
+            "${ARROW_PREFIX}/lib/libarrow_bundled_dependencies.a"
+            INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
+            INTERFACE_LINK_DIRECTORIES
+            "${ARROW_BUILD_DIR}/${CMAKE_BUILD_TYPE_LOWER}")
 
     add_dependencies(arrow arrow_ep)
     add_dependencies(parquet arrow_ep)
@@ -1108,20 +1113,33 @@ macro(build_arrow)
 
     target_link_libraries(arrow_dataset INTERFACE arrow_acero)
 
+    # Find Brotli libraries from system
+    find_library(BROTLI_COMMON_LIB brotlicommon)
+    find_library(BROTLI_ENC_LIB brotlienc)
+    find_library(BROTLI_DEC_LIB brotlidec)
+
     target_link_libraries(arrow
-                          INTERFACE zstd
-                                    snappy
-                                    lz4
-                                    zlib
-                                    arrow_bundled_dependencies)
+            INTERFACE zstd
+            snappy
+            lz4
+            zlib
+            arrow_bundled_dependencies)
+
+    # Add Brotli libraries if found
+    if(BROTLI_COMMON_LIB AND BROTLI_ENC_LIB AND BROTLI_DEC_LIB)
+        target_link_libraries(arrow
+                INTERFACE ${BROTLI_COMMON_LIB}
+                ${BROTLI_ENC_LIB}
+                ${BROTLI_DEC_LIB})
+    endif()
 
     target_link_libraries(parquet
-                          INTERFACE zstd
-                                    snappy
-                                    lz4
-                                    zlib
-                                    arrow_bundled_dependencies
-                                    arrow_dataset)
+            INTERFACE zstd
+            snappy
+            lz4
+            zlib
+            arrow_bundled_dependencies
+            arrow_dataset)
 
 endmacro(build_arrow)
 
@@ -1143,45 +1161,45 @@ macro(build_gtest)
         set(GTEST_STATIC_LIB "${GTEST_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gtestd.a")
         set(GMOCK_STATIC_LIB "${GTEST_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gmockd.a")
         set(GTEST_MAIN_STATIC_LIB
-            "${GTEST_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_maind.a")
+                "${GTEST_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_maind.a")
     else()
         set(GTEST_STATIC_LIB "${GTEST_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gtest.a")
         set(GMOCK_STATIC_LIB "${GTEST_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gmock.a")
         set(GTEST_MAIN_STATIC_LIB
-            "${GTEST_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main.a")
+                "${GTEST_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main.a")
     endif()
     set(GTEST_CMAKE_ARGS
-        ${EP_COMMON_CMAKE_ARGS}
-        "-DCMAKE_INSTALL_PREFIX=${GTEST_PREFIX}"
-        "-DCMAKE_CXX_FLAGS=${GTEST_CMAKE_CXX_FLAGS}"
-        "-DCMAKE_CXX_FLAGS_${UPPERCASE_BUILD_TYPE}=${GTEST_CMAKE_CXX_FLAGS}"
-        "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=${_GTEST_RUNTIME_DIR}"
-        "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_${CMAKE_BUILD_TYPE}=${_GTEST_RUNTIME_DIR}")
+            ${EP_COMMON_CMAKE_ARGS}
+            "-DCMAKE_INSTALL_PREFIX=${GTEST_PREFIX}"
+            "-DCMAKE_CXX_FLAGS=${GTEST_CMAKE_CXX_FLAGS}"
+            "-DCMAKE_CXX_FLAGS_${UPPERCASE_BUILD_TYPE}=${GTEST_CMAKE_CXX_FLAGS}"
+            "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=${_GTEST_RUNTIME_DIR}"
+            "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_${CMAKE_BUILD_TYPE}=${_GTEST_RUNTIME_DIR}")
 
     externalproject_add(googletest_ep
-                        URL ${GTEST_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_GTEST_BUILD_SHA256_CHECKSUM}"
-                        CMAKE_ARGS ${GTEST_CMAKE_ARGS}
-                        BUILD_BYPRODUCTS "${GTEST_STATIC_LIB}" "${GTEST_MAIN_STATIC_LIB}"
-                                         "${GMOCK_STATIC_LIB}")
+            URL ${GTEST_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_GTEST_BUILD_SHA256_CHECKSUM}"
+            CMAKE_ARGS ${GTEST_CMAKE_ARGS}
+            BUILD_BYPRODUCTS "${GTEST_STATIC_LIB}" "${GTEST_MAIN_STATIC_LIB}"
+            "${GMOCK_STATIC_LIB}")
 
     # The include directory must exist before it is referenced by a target.
     file(MAKE_DIRECTORY "${GTEST_INCLUDE_DIR}")
 
     add_library(GTest::gtest STATIC IMPORTED)
     set_target_properties(GTest::gtest
-                          PROPERTIES IMPORTED_LOCATION "${GTEST_STATIC_LIB}"
-                                     INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIR}")
+            PROPERTIES IMPORTED_LOCATION "${GTEST_STATIC_LIB}"
+            INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIR}")
 
     add_library(GTest::gtest_main STATIC IMPORTED)
     set_target_properties(GTest::gtest_main
-                          PROPERTIES IMPORTED_LOCATION "${GTEST_MAIN_STATIC_LIB}"
-                                     INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIR}")
+            PROPERTIES IMPORTED_LOCATION "${GTEST_MAIN_STATIC_LIB}"
+            INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIR}")
 
     add_library(GTest::gmock STATIC IMPORTED)
     set_target_properties(GTest::gmock
-                          PROPERTIES IMPORTED_LOCATION "${GMOCK_STATIC_LIB}"
-                                     INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIR}")
+            PROPERTIES IMPORTED_LOCATION "${GMOCK_STATIC_LIB}"
+            INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIR}")
     add_dependencies(GTest::gtest googletest_ep)
     add_dependencies(GTest::gtest_main googletest_ep)
     add_dependencies(GTest::gmock googletest_ep)
@@ -1216,25 +1234,25 @@ macro(build_tbb)
     string(TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_LOWER)
 
     set(TBB_CMAKE_ARGS
-        ${EP_COMMON_CMAKE_ARGS}
-        "-DCMAKE_INSTALL_PREFIX=${TBB_PREFIX}"
-        "-DCMAKE_CXX_FLAGS=${TBB_CMAKE_CXX_FLAGS}"
-        "-DCMAKE_C_FLAGS=${TBB_CMAKE_C_FLAGS}"
-        "-DCMAKE_CXX_FLAGS_${UPPERCASE_BUILD_TYPE}=${TBB_CMAKE_CXX_FLAGS}"
-        -DTBB_TEST=OFF)
+            ${EP_COMMON_CMAKE_ARGS}
+            "-DCMAKE_INSTALL_PREFIX=${TBB_PREFIX}"
+            "-DCMAKE_CXX_FLAGS=${TBB_CMAKE_CXX_FLAGS}"
+            "-DCMAKE_C_FLAGS=${TBB_CMAKE_C_FLAGS}"
+            "-DCMAKE_CXX_FLAGS_${UPPERCASE_BUILD_TYPE}=${TBB_CMAKE_CXX_FLAGS}"
+            -DTBB_TEST=OFF)
 
     externalproject_add(tbb_ep
-                        URL ${TBB_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_TBB_BUILD_SHA256_CHECKSUM}"
-                        CMAKE_ARGS ${TBB_CMAKE_ARGS}
-                        BUILD_BYPRODUCTS "${TBB_STATIC_LIB}")
+            URL ${TBB_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_TBB_BUILD_SHA256_CHECKSUM}"
+            CMAKE_ARGS ${TBB_CMAKE_ARGS}
+            BUILD_BYPRODUCTS "${TBB_STATIC_LIB}")
 
     add_library(tbb STATIC IMPORTED)
     set_target_properties(tbb
-                          PROPERTIES IMPORTED_LOCATION "${TBB_STATIC_LIB}"
-                                     INTERFACE_INCLUDE_DIRECTORIES "${TBB_INCLUDE_DIR}"
-                                     INTERFACE_LINK_DIRECTORIES
-                                     "${TBB_BUILD_DIR}/${CMAKE_BUILD_TYPE_LOWER}")
+            PROPERTIES IMPORTED_LOCATION "${TBB_STATIC_LIB}"
+            INTERFACE_INCLUDE_DIRECTORIES "${TBB_INCLUDE_DIR}"
+            INTERFACE_LINK_DIRECTORIES
+            "${TBB_BUILD_DIR}/${CMAKE_BUILD_TYPE_LOWER}")
     add_dependencies(tbb tbb_ep)
 
 endmacro(build_tbb)
@@ -1257,26 +1275,26 @@ macro(build_glog)
     endif()
 
     set(GLOG_CMAKE_ARGS
-        ${EP_COMMON_CMAKE_ARGS}
-        -DCMAKE_INSTALL_PREFIX=${GLOG_PREFIX}
-        -DWITH_GFLAGS=OFF
-        -DWITH_GTEST=OFF
-        -DCMAKE_CXX_FLAGS=${GLOG_CMAKE_CXX_FLAGS}
-        -DCMAKE_C_FLAGS=${GLOG_CMAKE_C_FLAGS})
+            ${EP_COMMON_CMAKE_ARGS}
+            -DCMAKE_INSTALL_PREFIX=${GLOG_PREFIX}
+            -DWITH_GFLAGS=OFF
+            -DWITH_GTEST=OFF
+            -DCMAKE_CXX_FLAGS=${GLOG_CMAKE_CXX_FLAGS}
+            -DCMAKE_C_FLAGS=${GLOG_CMAKE_C_FLAGS})
 
     externalproject_add(glog_ep
-                        URL ${GLOG_SOURCE_URL}
-                        URL_HASH "SHA256=${PAIMON_GLOG_BUILD_SHA256_CHECKSUM}"
-                        CMAKE_ARGS ${GLOG_CMAKE_ARGS}
-                        BUILD_BYPRODUCTS "${GLOG_STATIC_LIB}")
+            URL ${GLOG_SOURCE_URL}
+            URL_HASH "SHA256=${PAIMON_GLOG_BUILD_SHA256_CHECKSUM}"
+            CMAKE_ARGS ${GLOG_CMAKE_ARGS}
+            BUILD_BYPRODUCTS "${GLOG_STATIC_LIB}")
 
     file(MAKE_DIRECTORY "${GLOG_INCLUDE_DIR}")
     add_library(glog STATIC IMPORTED)
     set_target_properties(glog
-                          PROPERTIES IMPORTED_LOCATION "${GLOG_STATIC_LIB}"
-                                     INTERFACE_INCLUDE_DIRECTORIES "${GLOG_INCLUDE_DIR}"
-                                     INTERFACE_LINK_DIRECTORIES "${GLOG_BUILD_DIR}/lib"
-                                     INTERFACE_COMPILE_DEFINITIONS "GLOG_USE_GLOG_EXPORT")
+            PROPERTIES IMPORTED_LOCATION "${GLOG_STATIC_LIB}"
+            INTERFACE_INCLUDE_DIRECTORIES "${GLOG_INCLUDE_DIR}"
+            INTERFACE_LINK_DIRECTORIES "${GLOG_BUILD_DIR}/lib"
+            INTERFACE_COMPILE_DEFINITIONS "GLOG_USE_GLOG_EXPORT")
 
     add_dependencies(glog glog_ep)
 

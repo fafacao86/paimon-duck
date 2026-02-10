@@ -495,9 +495,7 @@ TEST_F(RawFileSplitReadTest, TestMatch) {
                              split_read->Match(data_split, /*force_keep_delete=*/false));
         ASSERT_FALSE(match_result);
     }
-    {
-        ASSERT_NOK(split_read->Match(nullptr, /*force_keep_delete=*/false));
-    }
+    { ASSERT_NOK(split_read->Match(nullptr, /*force_keep_delete=*/false)); }
 }
 
 }  // namespace paimon::test
