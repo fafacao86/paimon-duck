@@ -87,6 +87,16 @@ class VariableLengthKeyFactory : public KeyFactory {
     Result<KeyDeserializer> CreateDeserializer() override;
 };
 
+class DateKeyFactory final : public FixedLengthKeyFactory {
+ public:
+    FieldType GetFieldType() const override {
+        return FieldType::DATE;
+    }
+    size_t GetFieldSize() const override {
+        return sizeof(int32_t);
+    }
+};
+
 class IntKeyFactory final : public FixedLengthKeyFactory {
  public:
     FieldType GetFieldType() const override {

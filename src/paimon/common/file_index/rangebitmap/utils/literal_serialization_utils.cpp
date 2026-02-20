@@ -99,7 +99,12 @@ Result<std::function<Result<Literal>()>> LiteralSerializationUtils::CreateValueR
                 return Literal(value);
             });
         }
-        case FieldType::DATE:
+        case FieldType::DATE: {
+            return std::function<Result<Literal>()>([input_stream]() -> Result<Literal> {
+                PAIMON_ASSIGN_OR_RAISE(int32_t value, input_stream->ReadValue<int32_t>());
+                return Literal(FieldType::DATE, value);
+            });
+        }
         case FieldType::INT: {
             return std::function<Result<Literal>()>([input_stream]() -> Result<Literal> {
                 PAIMON_ASSIGN_OR_RAISE(int32_t value, input_stream->ReadValue<int32_t>());
@@ -108,7 +113,7 @@ Result<std::function<Result<Literal>()>> LiteralSerializationUtils::CreateValueR
         }
         case FieldType::BIGINT: {
             return std::function<Result<Literal>()>([input_stream]() -> Result<Literal> {
-                PAIMON_ASSIGN_OR_RAISE(const auto value, input_stream->ReadValue<int64_t>());
+                PAIMON_ASSIGN_OR_RAISE(int64_t value, input_stream->ReadValue<int64_t>());
                 return Literal(value);
             });
         }

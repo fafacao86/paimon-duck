@@ -33,6 +33,7 @@ Result<std::unique_ptr<KeyFactory>> KeyFactory::Create(const FieldType field_typ
         case FieldType::SMALLINT:
             return std::make_unique<SmallIntKeyFactory>();
         case FieldType::DATE:
+            return std::make_unique<DateKeyFactory>();
         case FieldType::INT:
             return std::make_unique<IntKeyFactory>();
         case FieldType::BIGINT:
