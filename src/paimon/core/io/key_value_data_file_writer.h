@@ -26,6 +26,7 @@
 #include "paimon/core/io/single_file_writer.h"
 #include "paimon/core/key_value.h"
 #include "paimon/core/manifest/file_source.h"
+#include "paimon/file_index/file_index_format.h"
 #include "paimon/result.h"
 #include "paimon/status.h"
 
@@ -45,13 +46,15 @@ class SimpleStats;
 class KeyValueDataFileWriter
     : public SingleFileWriter<KeyValueBatch, std::shared_ptr<DataFileMeta>> {
  public:
-    KeyValueDataFileWriter(const std::string& compression,
-                           std::function<Status(KeyValueBatch&&, ::ArrowArray*)> converter,
-                           int64_t schema_id, int32_t level, FileSource file_source,
-                           const std::vector<std::string>& primary_keys,
-                           const std::shared_ptr<FormatStatsExtractor>& stats_extractor,
-                           const std::shared_ptr<arrow::Schema>& write_schema,
-                           bool is_external_path, const std::shared_ptr<MemoryPool>& pool);
+    KeyValueDataFileWriter(
+        const std::string& compression,
+        std::function<Status(KeyValueBatch&&, ::ArrowArray*)> converter, int64_t schema_id,
+        int32_t level, FileSource file_source, const std::vector<std::string>& primary_keys,
+        const std::shared_ptr<FormatStatsExtractor>& stats_extractor,
+        const std::shared_ptr<arrow::Schema>& write_schema, bool is_external_path,
+        const std::shared_ptr<MemoryPool>& pool,
+        std::unique_ptr<FileIndexFormat::Writer> file_index_writer = nullptr,
+        int64_t file_index_in_manifest_threshold = 1024 * 1024);
 
     Status Write(KeyValueBatch batch) override;
 
@@ -66,6 +69,9 @@ class KeyValueDataFileWriter
                                  SimpleStats* key_stats, SimpleStats* value_stats) const;
     Status GenerateKeyStatsWithAllNull(SimpleStats* key_stats) const;
 
+    /// Extracts per-column data from the batch and feeds it to the file index writer.
+    Status FeedFileIndexWriter(::ArrowArray* batch_array);
+
  private:
     std::shared_ptr<MemoryPool> pool_;
     int64_t schema_id_;
@@ -76,6 +82,8 @@ class KeyValueDataFileWriter
     std::shared_ptr<arrow::Schema> write_schema_;
     bool is_external_path_;
     bool disable_stats_;
+    std::unique_ptr<FileIndexFormat::Writer> file_index_writer_;
+    int64_t file_index_in_manifest_threshold_;
 
     int64_t delete_row_count_ = 0;
     int64_t min_sequence_number_ = std::numeric_limits<int64_t>::max();

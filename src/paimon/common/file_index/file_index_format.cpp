@@ -20,17 +20,21 @@
 #include <map>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "arrow/c/bridge.h"
 #include "arrow/type.h"
 #include "fmt/format.h"
 #include "paimon/common/file_index/empty/empty_file_index_reader.h"
+#include "paimon/common/io/memory_segment_output_stream.h"
+#include "paimon/common/memory/memory_segment_utils.h"
 #include "paimon/common/utils/arrow/status_utils.h"
 #include "paimon/file_index/file_indexer.h"
 #include "paimon/file_index/file_indexer_factory.h"
 #include "paimon/io/byte_array_input_stream.h"
 #include "paimon/io/data_input_stream.h"
 #include "paimon/memory/bytes.h"
+#include "paimon/memory/memory_pool.h"
 #include "paimon/status.h"
 
 namespace paimon {
@@ -143,6 +147,163 @@ class FileIndexFormatReaderImpl : public FileIndexFormat::Reader {
     HeaderType header_;
 };
 
+class FileIndexFormatWriterImpl : public FileIndexFormat::Writer {
+ public:
+    struct IndexEntry {
+        std::string index_type;
+        std::shared_ptr<FileIndexWriter> writer;
+    };
+
+    void AddIndexWriter(const std::string& column_name, const std::string& index_type,
+                        std::shared_ptr<FileIndexWriter> writer,
+                        std::shared_ptr<arrow::DataType> struct_type) override {
+        columns_[column_name].push_back({index_type, std::move(writer)});
+        if (struct_type) {
+            auto it = column_struct_types_.find(column_name);
+            if (it == column_struct_types_.end()) {
+                column_struct_types_[column_name] = std::move(struct_type);
+            } else {
+                assert(it->second && it->second->Equals(struct_type));
+            }
+        }
+    }
+
+    Status AddBatch(const std::string& column_name, ::ArrowArray* batch) override {
+        auto it = columns_.find(column_name);
+        if (it == columns_.end()) {
+            return Status::OK();
+        }
+
+        auto& entries = it->second;
+        if (entries.size() == 1) {
+            return entries[0].writer->AddBatch(batch);
+        }
+
+        auto type_it = column_struct_types_.find(column_name);
+        if (type_it == column_struct_types_.end()) {
+            return Status::Invalid(
+                "struct_type required for column with multiple index writers: " + column_name);
+        }
+
+        PAIMON_ASSIGN_OR_RAISE_FROM_ARROW(std::shared_ptr<arrow::Array> imported,
+                                          arrow::ImportArray(batch, type_it->second));
+
+        for (auto& entry : entries) {
+            ::ArrowArray tmp_array {};
+            PAIMON_RETURN_NOT_OK_FROM_ARROW(arrow::ExportArray(*imported, &tmp_array));
+            PAIMON_RETURN_NOT_OK(entry.writer->AddBatch(&tmp_array));
+        }
+
+        return Status::OK();
+
+    }
+
+    Result<std::shared_ptr<Bytes>> Serialize(
+        const std::shared_ptr<MemoryPool>& pool) const override {
+        // Phase 1: Collect serialized body bytes from each sub-writer.
+        struct BodyEntry {
+            std::string column_name;
+            std::string index_type;
+            PAIMON_UNIQUE_PTR<Bytes> body;
+        };
+        std::vector<BodyEntry> body_entries;
+
+        for (const auto& [col_name, entries] : columns_) {
+            for (const auto& entry : entries) {
+                PAIMON_ASSIGN_OR_RAISE(auto body_bytes, entry.writer->SerializedBytes());
+                body_entries.push_back({col_name, entry.index_type, std::move(body_bytes)});
+            }
+        }
+
+        // Phase 2: Compute head_content_size and assign body offsets.
+        //   head_content = column_number(4)
+        //     + per column: column_name(2+len) + index_number(4)
+        //       + per index: index_type(2+len) + start_pos(4) + length(4)
+        //     + redundant_length(4)
+
+        // Group by column for deterministic serialization order.
+        std::map<std::string, std::vector<size_t>> column_to_body_indices;
+        for (size_t i = 0; i < body_entries.size(); i++) {
+            column_to_body_indices[body_entries[i].column_name].push_back(i);
+        }
+
+        int32_t head_content_size = 4;  // column_number
+        for (const auto& [col_name, indices] : column_to_body_indices) {
+            head_content_size += 2 + static_cast<int32_t>(col_name.size());  // column_name
+            head_content_size += 4;                                          // index_number
+            for (size_t idx : indices) {
+                head_content_size +=
+                    2 + static_cast<int32_t>(body_entries[idx].index_type.size());  // index_type
+                head_content_size += 4;                                             // start_pos
+                head_content_size += 4;                                             // length
+            }
+        }
+        head_content_size += 4;  // redundant_length
+
+        // magic(8) + version(4) + head_length(4) + head_content
+        int32_t head_length = 8 + 4 + 4 + head_content_size;
+
+        // Compute start_pos for each body entry (absolute offset from file start).
+        std::vector<int32_t> start_positions(body_entries.size());
+        int32_t body_offset = 0;
+        for (const auto& [col_name, indices] : column_to_body_indices) {
+            for (size_t idx : indices) {
+                int32_t body_size = static_cast<int32_t>(body_entries[idx].body->size());
+                if (body_size == 0) {
+                    start_positions[idx] = FileIndexFormat::EMPTY_INDEX_FLAG;
+                } else {
+                    start_positions[idx] = head_length + body_offset;
+                    body_offset += body_size;
+                }
+            }
+        }
+
+        // Phase 3: Write the full binary using MemorySegmentOutputStream.
+        MemorySegmentOutputStream out(MemorySegmentOutputStream::DEFAULT_SEGMENT_SIZE, pool);
+        out.SetOrder(ByteOrder::PAIMON_BIG_ENDIAN);
+
+        // Header preamble
+        out.WriteValue<int64_t>(FileIndexFormat::MAGIC);
+        out.WriteValue<int32_t>(FileIndexFormat::V_1);
+        out.WriteValue<int32_t>(head_length);
+
+        // Header content
+        out.WriteValue<int32_t>(static_cast<int32_t>(column_to_body_indices.size()));
+        for (const auto& [col_name, indices] : column_to_body_indices) {
+            out.WriteString(col_name);
+            out.WriteValue<int32_t>(static_cast<int32_t>(indices.size()));
+            for (size_t idx : indices) {
+                out.WriteString(body_entries[idx].index_type);
+                out.WriteValue<int32_t>(start_positions[idx]);
+                out.WriteValue<int32_t>(static_cast<int32_t>(body_entries[idx].body->size()));
+            }
+        }
+        out.WriteValue<int32_t>(0);  // redundant_length
+
+        // Body
+        for (const auto& [col_name, indices] : column_to_body_indices) {
+            for (size_t idx : indices) {
+                if (body_entries[idx].body->size() > 0) {
+                    out.Write(body_entries[idx].body->data(),
+                              static_cast<uint32_t>(body_entries[idx].body->size()));
+                }
+            }
+        }
+
+        // Phase 4: Convert segments to shared_ptr<Bytes>.
+        return MemorySegmentUtils::GetBytes(out.Segments(), /*base_offset=*/0,
+                                            /*size_in_bytes=*/out.CurrentSize(), pool.get());
+    }
+
+    bool IsEmpty() const override { return columns_.empty(); }
+
+ private:
+    // Preserves insertion order per column, using map for deterministic serialization order.
+    std::map<std::string, std::vector<IndexEntry>> columns_;
+    // Struct type per column for safe import/export when multiple writers share a column.
+    std::map<std::string, std::shared_ptr<arrow::DataType>> column_struct_types_;
+};
+
 const int64_t FileIndexFormat::MAGIC = 1493475289347502LL;
 const int32_t FileIndexFormat::EMPTY_INDEX_FLAG = -1;
 const int32_t FileIndexFormat::V_1 = 1;
@@ -151,4 +312,9 @@ Result<std::unique_ptr<FileIndexFormat::Reader>> FileIndexFormat::CreateReader(
     const std::shared_ptr<InputStream>& input_stream, const std::shared_ptr<MemoryPool>& pool) {
     return FileIndexFormatReaderImpl::Create(input_stream, pool);
 }
+
+std::unique_ptr<FileIndexFormat::Writer> FileIndexFormat::CreateWriter() {
+    return std::make_unique<FileIndexFormatWriterImpl>();
+}
+
 }  // namespace paimon

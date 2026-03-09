@@ -18,6 +18,7 @@
 #include "arrow/c/bridge.h"
 #include "arrow/c/helpers.h"
 #include "paimon/common/table/special_fields.h"
+#include "paimon/core/io/file_index_writer_factory.h"
 #include "paimon/core/io/key_value_data_file_writer.h"
 #include "paimon/core/io/key_value_meta_projection_consumer.h"
 #include "paimon/core/io/key_value_record_reader.h"
@@ -122,10 +123,14 @@ MergeTreeCompactRewriter::CreateRollingRowWriter(int32_t level) const {
             ArrowArrayMove(key_value_batch.batch.get(), array);
             return Status::OK();
         };
+        PAIMON_ASSIGN_OR_RAISE(
+            std::unique_ptr<FileIndexFormat::Writer> file_index_writer,
+            FileIndexWriterFactory::Create(write_schema_, options_, pool_));
         auto writer = std::make_unique<KeyValueDataFileWriter>(
             options_.GetFileCompression(), converter, schema_id_, level, FileSource::Compact(),
             trimmed_primary_keys_, stats_extractor, write_schema_,
-            data_file_path_factory_->IsExternalPath(), pool_);
+            data_file_path_factory_->IsExternalPath(), pool_, std::move(file_index_writer),
+            options_.GetFileIndexInManifestThreshold());
         PAIMON_RETURN_NOT_OK(writer->Init(options_.GetFileSystem(),
                                           data_file_path_factory_->NewPath(), writer_builder));
         return writer;

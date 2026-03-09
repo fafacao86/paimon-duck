@@ -262,6 +262,15 @@ struct PAIMON_EXPORT Options {
 
     /// "file-index.read.enabled" - Whether enabled read file index. Default value is "true".
     static const char FILE_INDEX_READ_ENABLED[];
+    /// "file-index.bitmap.columns" - Comma-separated column names for bitmap index.
+    static const char FILE_INDEX_BITMAP_COLUMNS[];
+    /// "file-index.bsi.columns" - Comma-separated column names for BSI index.
+    static const char FILE_INDEX_BSI_COLUMNS[];
+    /// "file-index.bloom-filter.columns" - Comma-separated column names for bloom filter index.
+    static const char FILE_INDEX_BLOOM_FILTER_COLUMNS[];
+    /// "file-index.in-manifest-threshold" - When index size <= threshold, embed in manifest; else
+    /// write separate .index file. Default "1MB".
+    static const char FILE_INDEX_IN_MANIFEST_THRESHOLD[];
 
     /// "data-file.external-paths" - The external paths where the data of this table will be
     /// written, multiple elements separated by commas.
