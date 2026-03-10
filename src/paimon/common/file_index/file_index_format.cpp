@@ -23,12 +23,14 @@
 #include <vector>
 
 #include "arrow/c/bridge.h"
+#include "arrow/c/helpers.h"
 #include "arrow/type.h"
 #include "fmt/format.h"
 #include "paimon/common/file_index/empty/empty_file_index_reader.h"
 #include "paimon/common/io/memory_segment_output_stream.h"
 #include "paimon/common/memory/memory_segment_utils.h"
 #include "paimon/common/utils/arrow/status_utils.h"
+#include "paimon/common/utils/scope_guard.h"
 #include "paimon/file_index/file_indexer.h"
 #include "paimon/file_index/file_indexer_factory.h"
 #include "paimon/io/byte_array_input_stream.h"
@@ -135,6 +137,7 @@ class FileIndexFormatReaderImpl : public FileIndexFormat::Reader {
         }
         ArrowSchema c_arrow_schema;
         PAIMON_RETURN_NOT_OK_FROM_ARROW(arrow::ExportSchema(*arrow_schema, &c_arrow_schema));
+        ScopeGuard schema_guard([&c_arrow_schema]() { ArrowSchemaRelease(&c_arrow_schema); });
         return file_indexer->CreateReader(&c_arrow_schema, offset_and_length.first,
                                           offset_and_length.second, input_stream_, pool_);
     }
@@ -154,51 +157,66 @@ class FileIndexFormatWriterImpl : public FileIndexFormat::Writer {
         std::shared_ptr<FileIndexWriter> writer;
     };
 
-    void AddIndexWriter(const std::string& column_name, const std::string& index_type,
-                        std::shared_ptr<FileIndexWriter> writer,
-                        std::shared_ptr<arrow::DataType> struct_type) override {
-        columns_[column_name].push_back({index_type, std::move(writer)});
+    Status AddIndexWriter(const std::string& column_name, const std::string& index_type,
+                          std::shared_ptr<FileIndexWriter> writer,
+                          std::shared_ptr<arrow::DataType> struct_type) override {
         if (struct_type) {
             auto it = column_struct_types_.find(column_name);
             if (it == column_struct_types_.end()) {
-                column_struct_types_[column_name] = std::move(struct_type);
-            } else {
-                assert(it->second && it->second->Equals(struct_type));
+                column_struct_types_[column_name] = struct_type;
+            } else if (!it->second || !it->second->Equals(struct_type)) {
+                return Status::Invalid("conflicting struct_type for column " + column_name);
             }
         }
+
+        columns_[column_name].push_back({index_type, std::move(writer)});
+        return Status::OK();
     }
 
     Status AddBatch(const std::string& column_name, ::ArrowArray* batch) override {
         auto it = columns_.find(column_name);
         if (it == columns_.end()) {
+            // This writer consumes batch even when no sub-writer is registered.
+            if (!ArrowArrayIsReleased(batch)) {
+                ArrowArrayRelease(batch);
+            }
             return Status::OK();
         }
 
         auto& entries = it->second;
+
         if (entries.size() == 1) {
+            // Ownership is transferred directly to the single sub-writer.
             return entries[0].writer->AddBatch(batch);
         }
 
         auto type_it = column_struct_types_.find(column_name);
         if (type_it == column_struct_types_.end()) {
-            return Status::Invalid(
-                "struct_type required for column with multiple index writers: " + column_name);
+            // We still own batch here because import/export did not happen.
+            if (!ArrowArrayIsReleased(batch)) {
+                ArrowArrayRelease(batch);
+            }
+            return Status::Invalid("struct_type required for column with multiple index writers: " +
+                                   column_name);
         }
 
+        // Protect the original input batch until ImportArray successfully consumes it.
+        ScopeGuard batch_guard([&batch]() { ArrowArrayRelease(batch); });
         PAIMON_ASSIGN_OR_RAISE_FROM_ARROW(std::shared_ptr<arrow::Array> imported,
                                           arrow::ImportArray(batch, type_it->second));
 
         for (auto& entry : entries) {
-            ::ArrowArray tmp_array {};
+            ::ArrowArray tmp_array{};
+            ScopeGuard tmp_guard([&tmp_array]() { ArrowArrayRelease(&tmp_array); });
             PAIMON_RETURN_NOT_OK_FROM_ARROW(arrow::ExportArray(*imported, &tmp_array));
             PAIMON_RETURN_NOT_OK(entry.writer->AddBatch(&tmp_array));
+            tmp_guard.Release();
         }
 
         return Status::OK();
-
     }
 
-    Result<std::shared_ptr<Bytes>> Serialize(
+    Result<PAIMON_UNIQUE_PTR<Bytes>> Serialize(
         const std::shared_ptr<MemoryPool>& pool) const override {
         // Phase 1: Collect serialized body bytes from each sub-writer.
         struct BodyEntry {
@@ -248,7 +266,7 @@ class FileIndexFormatWriterImpl : public FileIndexFormat::Writer {
         int32_t body_offset = 0;
         for (const auto& [col_name, indices] : column_to_body_indices) {
             for (size_t idx : indices) {
-                int32_t body_size = static_cast<int32_t>(body_entries[idx].body->size());
+                auto body_size = static_cast<int32_t>(body_entries[idx].body->size());
                 if (body_size == 0) {
                     start_positions[idx] = FileIndexFormat::EMPTY_INDEX_FLAG;
                 } else {
@@ -290,12 +308,13 @@ class FileIndexFormatWriterImpl : public FileIndexFormat::Writer {
             }
         }
 
-        // Phase 4: Convert segments to shared_ptr<Bytes>.
-        return MemorySegmentUtils::GetBytes(out.Segments(), /*base_offset=*/0,
-                                            /*size_in_bytes=*/out.CurrentSize(), pool.get());
+        // Phase 4: Convert segments to PAIMON_UNIQUE_PTR<Bytes> using memory pool.
+        return MemorySegmentUtils::CopyToBytes(out.Segments(), 0, out.CurrentSize(), pool.get());
     }
 
-    bool IsEmpty() const override { return columns_.empty(); }
+    bool IsEmpty() const override {
+        return columns_.empty();
+    }
 
  private:
     // Preserves insertion order per column, using map for deterministic serialization order.

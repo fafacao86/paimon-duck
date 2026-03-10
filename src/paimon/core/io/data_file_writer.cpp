@@ -20,10 +20,12 @@
 
 #include "arrow/c/abi.h"
 #include "arrow/c/bridge.h"
+#include "arrow/c/helpers.h"
 #include "arrow/type.h"
 #include "paimon/common/utils/arrow/status_utils.h"
 #include "paimon/common/utils/long_counter.h"
 #include "paimon/common/utils/path_util.h"
+#include "paimon/common/utils/scope_guard.h"
 #include "paimon/core/io/data_file_path_factory.h"
 #include "paimon/core/stats/simple_stats.h"
 #include "paimon/core/stats/simple_stats_converter.h"
@@ -38,8 +40,7 @@ DataFileWriter::DataFileWriter(
     int64_t schema_id, const std::shared_ptr<LongCounter>& seq_num_counter, FileSource file_source,
     const std::shared_ptr<FormatStatsExtractor>& stats_extractor, bool is_external_path,
     const std::optional<std::vector<std::string>>& write_cols,
-    const std::shared_ptr<MemoryPool>& pool,
-    const std::shared_ptr<arrow::Schema>& write_schema,
+    const std::shared_ptr<MemoryPool>& pool, const std::shared_ptr<arrow::Schema>& write_schema,
     std::unique_ptr<FileIndexFormat::Writer> file_index_writer,
     int64_t file_index_in_manifest_threshold)
     : SingleFileWriter(compression, converter),
@@ -75,9 +76,11 @@ Status DataFileWriter::FeedFileIndexWriter(::ArrowArray* batch_array) {
         auto col = struct_array->field(i);
         PAIMON_ASSIGN_OR_RAISE_FROM_ARROW(std::shared_ptr<arrow::StructArray> col_struct,
                                           arrow::StructArray::Make({col}, {field->name()}));
-        ::ArrowArray c_col_array;
+        ::ArrowArray c_col_array{};
+        ScopeGuard array_guard([&c_col_array]() { ArrowArrayRelease(&c_col_array); });
         PAIMON_RETURN_NOT_OK_FROM_ARROW(arrow::ExportArray(*col_struct, &c_col_array));
         PAIMON_RETURN_NOT_OK(file_index_writer_->AddBatch(field->name(), &c_col_array));
+        array_guard.Release();
     }
 
     PAIMON_RETURN_NOT_OK_FROM_ARROW(arrow::ExportArray(*array, batch_array));
@@ -98,10 +101,10 @@ Result<std::shared_ptr<DataFileMeta>> DataFileWriter::GetResult() {
     std::shared_ptr<Bytes> embedded_index;
     std::vector<std::optional<std::string>> extra_files;
     if (file_index_writer_ && !file_index_writer_->IsEmpty()) {
-        PAIMON_ASSIGN_OR_RAISE(std::shared_ptr<Bytes> index_bytes,
+        PAIMON_ASSIGN_OR_RAISE(PAIMON_UNIQUE_PTR<Bytes> index_bytes,
                                file_index_writer_->Serialize(pool_));
         if (static_cast<int64_t>(index_bytes->size()) <= file_index_in_manifest_threshold_) {
-            embedded_index = std::move(index_bytes);
+            embedded_index = std::shared_ptr<Bytes>(std::move(index_bytes));
         } else {
             std::string index_file_name =
                 PathUtil::GetName(path_) + DataFilePathFactory::INDEX_PATH_SUFFIX;
@@ -109,8 +112,8 @@ Result<std::shared_ptr<DataFileMeta>> DataFileWriter::GetResult() {
                 PathUtil::JoinPath(PathUtil::GetParentDirPath(path_), index_file_name);
             PAIMON_ASSIGN_OR_RAISE(std::unique_ptr<OutputStream> out,
                                    fs_->Create(index_path, /*overwrite=*/false));
-            PAIMON_RETURN_NOT_OK(out->Write(index_bytes->data(),
-                                            static_cast<uint32_t>(index_bytes->size())));
+            PAIMON_RETURN_NOT_OK(
+                out->Write(index_bytes->data(), static_cast<uint32_t>(index_bytes->size())));
             PAIMON_RETURN_NOT_OK(out->Flush());
             PAIMON_RETURN_NOT_OK(out->Close());
             extra_files.push_back(index_file_name);

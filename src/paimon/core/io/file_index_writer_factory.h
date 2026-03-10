@@ -44,8 +44,7 @@ class FileIndexWriterFactory {
     /// @param pool Memory pool for allocations.
     /// @return A configured writer, or an empty writer if no index columns are configured.
     static Result<std::unique_ptr<FileIndexFormat::Writer>> Create(
-        const std::shared_ptr<arrow::Schema>& write_schema,
-        const CoreOptions& options,
+        const std::shared_ptr<arrow::Schema>& write_schema, const CoreOptions& options,
         const std::shared_ptr<MemoryPool>& pool);
 };
 

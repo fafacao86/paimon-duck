@@ -478,9 +478,8 @@ Result<CoreOptions> CoreOptions::FromMap(
                                           &impl->file_index_bitmap_columns));
 
     // Parse file-index.bsi.columns
-    PAIMON_RETURN_NOT_OK(parser.ParseList(Options::FILE_INDEX_BSI_COLUMNS,
-                                          Options::FIELDS_SEPARATOR,
-                                          &impl->file_index_bsi_columns));
+    PAIMON_RETURN_NOT_OK(parser.ParseList(
+        Options::FILE_INDEX_BSI_COLUMNS, Options::FIELDS_SEPARATOR, &impl->file_index_bsi_columns));
 
     // Parse file-index.bloom-filter.columns
     PAIMON_RETURN_NOT_OK(parser.ParseList(Options::FILE_INDEX_BLOOM_FILTER_COLUMNS,

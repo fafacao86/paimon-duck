@@ -19,6 +19,7 @@
 
 #include "arrow/array/array_nested.h"
 #include "arrow/array/builder_primitive.h"
+#include "arrow/c/helpers.h"
 #include "gtest/gtest.h"
 #include "paimon/common/file_index/bitmap/bitmap_file_index.h"
 #include "paimon/common/file_index/bloomfilter/bloom_filter_file_index.h"
@@ -832,8 +833,7 @@ TEST_F(FileIndexFormatTest, TestWriterAndReader) {
         ArrowSchema c_col1_schema;
         ASSERT_TRUE(arrow::ExportSchema(*arrow::schema({col1_field}), &c_col1_schema).ok());
         BitmapFileIndex bitmap_indexer({});
-        ASSERT_OK_AND_ASSIGN(auto col1_writer,
-                             bitmap_indexer.CreateWriter(&c_col1_schema, pool_));
+        ASSERT_OK_AND_ASSIGN(auto col1_writer, bitmap_indexer.CreateWriter(&c_col1_schema, pool_));
         writer->AddIndexWriter("col1", "bitmap", std::move(col1_writer),
                                arrow::struct_({col1_field}));
     }
@@ -843,8 +843,7 @@ TEST_F(FileIndexFormatTest, TestWriterAndReader) {
         ArrowSchema c_col2_schema;
         ASSERT_TRUE(arrow::ExportSchema(*arrow::schema({col2_field}), &c_col2_schema).ok());
         BitmapFileIndex bitmap_indexer({});
-        ASSERT_OK_AND_ASSIGN(auto col2_writer,
-                             bitmap_indexer.CreateWriter(&c_col2_schema, pool_));
+        ASSERT_OK_AND_ASSIGN(auto col2_writer, bitmap_indexer.CreateWriter(&c_col2_schema, pool_));
         writer->AddIndexWriter("col2", "bitmap", std::move(col2_writer),
                                arrow::struct_({col2_field}));
     }
@@ -887,8 +886,7 @@ TEST_F(FileIndexFormatTest, TestWriterAndReader) {
     ASSERT_GT(bytes->size(), 0u);
 
     // Read back
-    auto input_stream =
-        std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
+    auto input_stream = std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
     ASSERT_OK_AND_ASSIGN(auto reader, FileIndexFormat::CreateReader(input_stream, pool_));
 
     // Verify col1
@@ -943,8 +941,8 @@ TEST_F(FileIndexFormatTest, TestWriterAndReader) {
 
     // Non-existent column should return empty
     {
-        auto schema_with_extra = arrow::schema(
-            {col1_field, col2_field, arrow::field("non-exist", arrow::int32())});
+        auto schema_with_extra =
+            arrow::schema({col1_field, col2_field, arrow::field("non-exist", arrow::int32())});
         ASSERT_OK_AND_ASSIGN(
             auto readers,
             reader->ReadColumnIndex("non-exist", CreateArrowSchema(schema_with_extra).get()));
@@ -954,11 +952,10 @@ TEST_F(FileIndexFormatTest, TestWriterAndReader) {
 
 // Helper: register a bitmap sub-writer for the given field into the writer.
 // Consumes the exported schema via BitmapFileIndex::CreateWriter (which calls ImportSchema).
-static void RegisterBitmapWriter(FileIndexFormat::Writer* writer,
-                                const std::string& col_name,
-                                const std::shared_ptr<arrow::DataType>& arrow_type,
-                                const std::shared_ptr<MemoryPool>& pool,
-                                const std::string& index_type = "bitmap") {
+static void RegisterBitmapWriter(FileIndexFormat::Writer* writer, const std::string& col_name,
+                                 const std::shared_ptr<arrow::DataType>& arrow_type,
+                                 const std::shared_ptr<MemoryPool>& pool,
+                                 const std::string& index_type = "bitmap") {
     auto col_field = arrow::field(col_name, arrow_type);
     auto field_schema = arrow::schema({col_field});
     ArrowSchema c_schema;
@@ -971,10 +968,8 @@ static void RegisterBitmapWriter(FileIndexFormat::Writer* writer,
 }
 
 // Helper: build a single-column int32 struct ArrowArray and call writer->AddBatch.
-static void AddInt32Batch(FileIndexFormat::Writer* writer,
-                          const std::string& col_name,
-                          const std::vector<int32_t>& values,
-                          const std::vector<bool>& validity) {
+static void AddInt32Batch(FileIndexFormat::Writer* writer, const std::string& col_name,
+                          const std::vector<int32_t>& values, const std::vector<bool>& validity) {
     arrow::Int32Builder builder;
     ASSERT_TRUE(builder.AppendValues(values, validity).ok());
     std::shared_ptr<arrow::Array> arr;
@@ -1004,8 +999,7 @@ TEST_F(FileIndexFormatTest, TestWriterHeaderBytesExact) {
     auto read_be_int32 = [&](int32_t off) -> int32_t {
         return (static_cast<int32_t>(data[off]) << 24) |
                (static_cast<int32_t>(data[off + 1]) << 16) |
-               (static_cast<int32_t>(data[off + 2]) << 8) |
-                static_cast<int32_t>(data[off + 3]);
+               (static_cast<int32_t>(data[off + 2]) << 8) | static_cast<int32_t>(data[off + 3]);
     };
     auto read_be_int16 = [&](int32_t off) -> int16_t {
         return static_cast<int16_t>((static_cast<int16_t>(data[off]) << 8) | data[off + 1]);
@@ -1061,8 +1055,7 @@ TEST_F(FileIndexFormatTest, TestWriterOffsetAndLengthConsistency) {
     auto read_be_int32 = [&](int32_t off) -> int32_t {
         return (static_cast<int32_t>(data[off]) << 24) |
                (static_cast<int32_t>(data[off + 1]) << 16) |
-               (static_cast<int32_t>(data[off + 2]) << 8) |
-                static_cast<int32_t>(data[off + 3]);
+               (static_cast<int32_t>(data[off + 2]) << 8) | static_cast<int32_t>(data[off + 3]);
     };
 
     static constexpr int32_t EXPECTED_HEAD_LENGTH = 76;
@@ -1073,10 +1066,10 @@ TEST_F(FileIndexFormatTest, TestWriterOffsetAndLengthConsistency) {
 
     // col1 start_pos at [38..41], length at [42..45]
     int32_t col1_start = read_be_int32(38);
-    int32_t col1_len   = read_be_int32(42);
+    int32_t col1_len = read_be_int32(42);
     // col2 start_pos at [64..67], length at [68..71]
     int32_t col2_start = read_be_int32(64);
-    int32_t col2_len   = read_be_int32(68);
+    int32_t col2_len = read_be_int32(68);
     // redundant_length at [72..75] = 0
     ASSERT_EQ(0, read_be_int32(72));
 
@@ -1101,8 +1094,7 @@ TEST_F(FileIndexFormatTest, TestWriterEmptyWriter) {
     // magic(8) + version(4) + head_length(4) + column_count=0(4) + redundant=0(4) = 24
     ASSERT_EQ(24u, bytes->size());
 
-    auto input_stream =
-        std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
+    auto input_stream = std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
     ASSERT_OK_AND_ASSIGN(auto reader, FileIndexFormat::CreateReader(input_stream, pool_));
 
     auto schema = arrow::schema({arrow::field("col1", arrow::int32())});
@@ -1124,8 +1116,7 @@ TEST_F(FileIndexFormatTest, TestWriterMultipleBatches) {
     AddInt32Batch(writer.get(), "c", {0}, {false});
 
     ASSERT_OK_AND_ASSIGN(auto bytes, writer->Serialize(pool_));
-    auto input_stream =
-        std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
+    auto input_stream = std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
     ASSERT_OK_AND_ASSIGN(auto reader, FileIndexFormat::CreateReader(input_stream, pool_));
 
     auto schema = arrow::schema({arrow::field("c", arrow::int32())});
@@ -1173,8 +1164,7 @@ TEST_F(FileIndexFormatTest, TestWriterAddBatchToUnregisteredColumn) {
     AddInt32Batch(writer.get(), "col1", {1, 2, 3}, {true, true, true});
 
     ASSERT_OK_AND_ASSIGN(auto bytes, writer->Serialize(pool_));
-    auto input_stream =
-        std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
+    auto input_stream = std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
     ASSERT_OK_AND_ASSIGN(auto reader, FileIndexFormat::CreateReader(input_stream, pool_));
 
     auto schema = arrow::schema(
@@ -1188,10 +1178,25 @@ TEST_F(FileIndexFormatTest, TestWriterAddBatchToUnregisteredColumn) {
     // unregistered should be absent (empty vector)
     {
         ASSERT_OK_AND_ASSIGN(
-            auto readers,
-            reader->ReadColumnIndex("unregistered", CreateArrowSchema(schema).get()));
+            auto readers, reader->ReadColumnIndex("unregistered", CreateArrowSchema(schema).get()));
         ASSERT_TRUE(readers.empty());
     }
+}
+
+TEST_F(FileIndexFormatTest, TestWriterAddBatchToUnregisteredColumnReleasesBatch) {
+    // Empty writer: no AddIndexWriter called. AddBatch for any column should release the batch.
+    auto writer = FileIndexFormat::CreateWriter();
+
+    arrow::Int32Builder builder;
+    ASSERT_TRUE(builder.AppendValues({5, 6, 7}, {true, true, true}).ok());
+    std::shared_ptr<arrow::Array> arr;
+    ASSERT_TRUE(builder.Finish(&arr).ok());
+    auto struct_arr = arrow::StructArray::Make({arr}, {"any_column"}).ValueOrDie();
+    ArrowArray c_arr;
+    ASSERT_TRUE(arrow::ExportArray(*struct_arr, &c_arr).ok());
+
+    ASSERT_OK(writer->AddBatch("any_column", &c_arr));
+    ASSERT_TRUE(ArrowArrayIsReleased(&c_arr));
 }
 
 TEST_F(FileIndexFormatTest, TestWriterInt64Column) {
@@ -1212,9 +1217,7 @@ TEST_F(FileIndexFormatTest, TestWriterInt64Column) {
     {
         arrow::Int64Builder builder;
         ASSERT_TRUE(
-            builder
-                .AppendValues({100LL, 200LL, 0LL, 100LL, 300LL},
-                              {true, true, false, true, true})
+            builder.AppendValues({100LL, 200LL, 0LL, 100LL, 300LL}, {true, true, false, true, true})
                 .ok());
         std::shared_ptr<arrow::Array> arr;
         ASSERT_TRUE(builder.Finish(&arr).ok());
@@ -1225,8 +1228,7 @@ TEST_F(FileIndexFormatTest, TestWriterInt64Column) {
     }
 
     ASSERT_OK_AND_ASSIGN(auto bytes, writer->Serialize(pool_));
-    auto input_stream =
-        std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
+    auto input_stream = std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
     ASSERT_OK_AND_ASSIGN(auto reader, FileIndexFormat::CreateReader(input_stream, pool_));
 
     auto schema = arrow::schema({col_field});
@@ -1236,15 +1238,15 @@ TEST_F(FileIndexFormatTest, TestWriterInt64Column) {
     auto* bm = dynamic_cast<BitmapFileIndexReader*>(readers[0].get());
     ASSERT_TRUE(bm);
     {
-        ASSERT_OK_AND_ASSIGN(auto result, bm->VisitEqual(Literal((int64_t)100)));
+        ASSERT_OK_AND_ASSIGN(auto result, bm->VisitEqual(Literal(static_cast<int64_t>(100))));
         ASSERT_EQ("{0,3}", result->ToString());
     }
     {
-        ASSERT_OK_AND_ASSIGN(auto result, bm->VisitEqual(Literal((int64_t)200)));
+        ASSERT_OK_AND_ASSIGN(auto result, bm->VisitEqual(Literal(static_cast<int64_t>(200))));
         ASSERT_EQ("{1}", result->ToString());
     }
     {
-        ASSERT_OK_AND_ASSIGN(auto result, bm->VisitEqual(Literal((int64_t)300)));
+        ASSERT_OK_AND_ASSIGN(auto result, bm->VisitEqual(Literal(static_cast<int64_t>(300))));
         ASSERT_EQ("{4}", result->ToString());
     }
     {
@@ -1265,8 +1267,7 @@ TEST_F(FileIndexFormatTest, TestWriterAllNullColumn) {
     AddInt32Batch(writer.get(), "nullcol", {0, 0, 0}, {false, false, false});
 
     ASSERT_OK_AND_ASSIGN(auto bytes, writer->Serialize(pool_));
-    auto input_stream =
-        std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
+    auto input_stream = std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
     ASSERT_OK_AND_ASSIGN(auto reader, FileIndexFormat::CreateReader(input_stream, pool_));
 
     auto schema = arrow::schema({arrow::field("nullcol", arrow::int32())});
@@ -1294,11 +1295,11 @@ TEST_F(FileIndexFormatTest, TestWriterNotEqualInNotIn) {
     // Data: [10, 20, 30, 10, 20, null] (6 rows)
     auto writer = FileIndexFormat::CreateWriter();
     RegisterBitmapWriter(writer.get(), "v", arrow::int32(), pool_);
-    AddInt32Batch(writer.get(), "v", {10, 20, 30, 10, 20, 0}, {true, true, true, true, true, false});
+    AddInt32Batch(writer.get(), "v", {10, 20, 30, 10, 20, 0},
+                  {true, true, true, true, true, false});
 
     ASSERT_OK_AND_ASSIGN(auto bytes, writer->Serialize(pool_));
-    auto input_stream =
-        std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
+    auto input_stream = std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
     ASSERT_OK_AND_ASSIGN(auto reader, FileIndexFormat::CreateReader(input_stream, pool_));
 
     auto schema = arrow::schema({arrow::field("v", arrow::int32())});
@@ -1314,14 +1315,12 @@ TEST_F(FileIndexFormatTest, TestWriterNotEqualInNotIn) {
     }
     {
         // In([10, 30]): rows with 10 or 30 → {0,2,3}
-        ASSERT_OK_AND_ASSIGN(auto result,
-                             bm->VisitIn({Literal(10), Literal(30)}));
+        ASSERT_OK_AND_ASSIGN(auto result, bm->VisitIn({Literal(10), Literal(30)}));
         ASSERT_EQ("{0,2,3}", result->ToString());
     }
     {
         // NotIn([10, 30]): rows not containing 10 or 30; null excluded → {1,4}
-        ASSERT_OK_AND_ASSIGN(auto result,
-                             bm->VisitNotIn({Literal(10), Literal(30)}));
+        ASSERT_OK_AND_ASSIGN(auto result, bm->VisitNotIn({Literal(10), Literal(30)}));
         ASSERT_EQ("{1,4}", result->ToString());
     }
     {
@@ -1375,12 +1374,11 @@ TEST_F(FileIndexFormatTest, TestWriterMultipleIndexTypesPerColumn) {
     ASSERT_EQ(1, counting_empty_writer->add_batch_calls());
 
     ASSERT_OK_AND_ASSIGN(auto bytes, writer->Serialize(pool_));
-    auto input_stream =
-        std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
+    auto input_stream = std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
     ASSERT_OK_AND_ASSIGN(auto reader, FileIndexFormat::CreateReader(input_stream, pool_));
 
-    auto schema = arrow::schema(
-        {arrow::field("c", arrow::int32()), arrow::field("d", arrow::int32())});
+    auto schema =
+        arrow::schema({arrow::field("c", arrow::int32()), arrow::field("d", arrow::int32())});
 
     // Column "c" should have 2 readers:
     //   - bitmap reader with expected filtering semantics
@@ -1439,7 +1437,9 @@ TEST_F(FileIndexFormatTest, TestWriterMultipleIndexTypesPerColumn) {
 class ZeroBodyWriter : public FileIndexWriter {
  public:
     explicit ZeroBodyWriter(MemoryPool* pool) : pool_(pool) {}
-    Status AddBatch(::ArrowArray* /*batch*/) override { return Status::OK(); }
+    Status AddBatch(::ArrowArray* /*batch*/) override {
+        return Status::OK();
+    }
     Result<PAIMON_UNIQUE_PTR<Bytes>> SerializedBytes() const override {
         return Bytes::AllocateBytes(0, pool_);
     }
@@ -1448,14 +1448,54 @@ class ZeroBodyWriter : public FileIndexWriter {
     MemoryPool* pool_;
 };
 
+// FailingAddBatchWriter: AddBatch returns error. Must release batch when rejecting.
+class FailingAddBatchWriter : public FileIndexWriter {
+ public:
+    explicit FailingAddBatchWriter(MemoryPool* pool) : pool_(pool) {}
+    Status AddBatch(::ArrowArray* batch) override {
+        ArrowArrayRelease(batch);
+        return Status::Invalid("injected failure for memory test");
+    }
+    Result<PAIMON_UNIQUE_PTR<Bytes>> SerializedBytes() const override {
+        return Bytes::AllocateBytes(0, pool_);
+    }
+
+ private:
+    MemoryPool* pool_;
+};
+
+TEST_F(FileIndexFormatTest, TestWriterAddBatchMultiWriterFailureReleasesResources) {
+    // Column "c" has two sub-writers: first succeeds, second fails.
+    // Verifies tmp_array and original batch are properly released on failure path.
+    auto writer = FileIndexFormat::CreateWriter();
+    auto c_field = arrow::field("c", arrow::int32());
+
+    writer->AddIndexWriter("c", "ok", std::make_shared<ZeroBodyWriter>(pool_.get()),
+                           arrow::struct_({c_field}));
+    writer->AddIndexWriter("c", "fail", std::make_shared<FailingAddBatchWriter>(pool_.get()),
+                           arrow::struct_({c_field}));
+
+    arrow::Int32Builder builder;
+    ASSERT_TRUE(builder.AppendValues({1, 2, 3}, {true, true, true}).ok());
+    std::shared_ptr<arrow::Array> arr;
+    ASSERT_TRUE(builder.Finish(&arr).ok());
+    auto struct_arr = arrow::StructArray::Make({arr}, {"c"}).ValueOrDie();
+    ArrowArray c_arr;
+    ASSERT_TRUE(arrow::ExportArray(*struct_arr, &c_arr).ok());
+
+    Status st = writer->AddBatch("c", &c_arr);
+    ASSERT_FALSE(st.ok());
+    ASSERT_TRUE(st.ToString().find("injected failure") != std::string::npos);
+    ASSERT_TRUE(ArrowArrayIsReleased(&c_arr));
+}
+
 TEST_F(FileIndexFormatTest, TestWriterEmptyIndexEntry) {
     // "col1" uses ZeroBodyWriter (triggers EMPTY_INDEX_FLAG), "col2" has real bitmap data.
     // Verifies that EMPTY_INDEX_FLAG is written and read back as EmptyFileIndexReader.
     auto writer = FileIndexFormat::CreateWriter();
 
     // col1: zero-body writer, type "zero" (4 chars)
-    writer->AddIndexWriter("col1", "zero",
-                           std::make_shared<ZeroBodyWriter>(pool_.get()), nullptr);
+    writer->AddIndexWriter("col1", "zero", std::make_shared<ZeroBodyWriter>(pool_.get()), nullptr);
 
     // col2: normal bitmap writer
     RegisterBitmapWriter(writer.get(), "col2", arrow::int32(), pool_);
@@ -1471,8 +1511,7 @@ TEST_F(FileIndexFormatTest, TestWriterEmptyIndexEntry) {
     auto read_be_int32 = [&](int32_t off) -> int32_t {
         return (static_cast<int32_t>(data[off]) << 24) |
                (static_cast<int32_t>(data[off + 1]) << 16) |
-               (static_cast<int32_t>(data[off + 2]) << 8) |
-                static_cast<int32_t>(data[off + 3]);
+               (static_cast<int32_t>(data[off + 2]) << 8) | static_cast<int32_t>(data[off + 3]);
     };
 
     // col1 start_pos at [36..39] = -1 (EMPTY_INDEX_FLAG), length at [40..43] = 0
@@ -1483,12 +1522,11 @@ TEST_F(FileIndexFormatTest, TestWriterEmptyIndexEntry) {
     ASSERT_GT(read_be_int32(66), 0);
 
     // Reader checks.
-    auto input_stream =
-        std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
+    auto input_stream = std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
     ASSERT_OK_AND_ASSIGN(auto reader, FileIndexFormat::CreateReader(input_stream, pool_));
 
-    auto schema = arrow::schema(
-        {arrow::field("col1", arrow::int32()), arrow::field("col2", arrow::int32())});
+    auto schema =
+        arrow::schema({arrow::field("col1", arrow::int32()), arrow::field("col2", arrow::int32())});
 
     // col1 → EmptyFileIndexReader
     {
@@ -1541,8 +1579,7 @@ TEST_F(FileIndexFormatTest, CppWriterJavaReaderCompatibility) {
     auto read_be_int32 = [&](int32_t off) -> int32_t {
         return (static_cast<int32_t>(data[off]) << 24) |
                (static_cast<int32_t>(data[off + 1]) << 16) |
-               (static_cast<int32_t>(data[off + 2]) << 8) |
-                static_cast<int32_t>(data[off + 3]);
+               (static_cast<int32_t>(data[off + 2]) << 8) | static_cast<int32_t>(data[off + 3]);
     };
     auto read_be_int16 = [&](int32_t off) -> int16_t {
         return static_cast<int16_t>((static_cast<int16_t>(data[off]) << 8) | data[off + 1]);
@@ -1601,8 +1638,7 @@ TEST_F(FileIndexFormatTest, CppWriterJavaReaderCompatibility) {
     ASSERT_EQ(static_cast<size_t>(50 + body_len), bytes->size());
 
     // Semantic check: Reader can parse and return correct query results.
-    auto input_stream =
-        std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
+    auto input_stream = std::make_shared<ByteArrayInputStream>(bytes->data(), bytes->size());
     ASSERT_OK_AND_ASSIGN(auto reader, FileIndexFormat::CreateReader(input_stream, pool_));
     auto schema = arrow::schema({arrow::field("col1", arrow::int32())});
     ASSERT_OK_AND_ASSIGN(auto readers,

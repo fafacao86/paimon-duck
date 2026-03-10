@@ -232,8 +232,7 @@ TEST(CoreOptionsTest, TestFromMap) {
     ASSERT_EQ(core_options.GetScanFallbackBranch(), std::optional<std::string>("fallback"));
     ASSERT_EQ(core_options.GetBranch(), "rt");
     ASSERT_FALSE(core_options.FileIndexReadEnabled());
-    ASSERT_EQ(std::vector<std::string>({"f1", "f2"}),
-              core_options.GetFileIndexBitmapColumns());
+    ASSERT_EQ(std::vector<std::string>({"f1", "f2"}), core_options.GetFileIndexBitmapColumns());
     ASSERT_EQ(1, core_options.GetFileIndexInManifestThreshold());
     ASSERT_EQ(core_options.GetDataFileExternalPaths(),
               std::optional<std::string>("FILE:///tmp/index"));

@@ -24,6 +24,8 @@
 #include "arrow/type_fwd.h"
 #include "paimon/file_index/file_index_reader.h"
 #include "paimon/file_index/file_index_writer.h"
+#include "paimon/memory/bytes.h"
+#include "paimon/memory/memory_pool.h"
 #include "paimon/result.h"
 #include "paimon/visibility.h"
 
@@ -31,7 +33,6 @@ struct ArrowSchema;
 struct ArrowArray;
 
 namespace paimon {
-class Bytes;
 class InputStream;
 class MemoryPool;
 
@@ -139,20 +140,29 @@ class FileIndexFormat::Writer {
     /// @param writer       The concrete FileIndexWriter that builds the index body bytes.
     /// @param struct_type  Arrow struct type wrapping the single indexed field, used internally
     ///                     to safely duplicate the ArrowArray when multiple writers share a column.
-    virtual void AddIndexWriter(const std::string& column_name, const std::string& index_type,
-                                std::shared_ptr<FileIndexWriter> writer,
-                                std::shared_ptr<arrow::DataType> struct_type) = 0;
+    virtual Status AddIndexWriter(const std::string& column_name, const std::string& index_type,
+                                  std::shared_ptr<FileIndexWriter> writer,
+                                  std::shared_ptr<arrow::DataType> struct_type) = 0;
     /// Feeds a batch of data to all sub-writers registered for the given column.
     ///
     /// @param column_name Name of the column whose sub-writers should receive this batch.
     /// @param batch       ArrowArray containing the column data.
+    ///
+    /// @note Ownership of `batch` is transferred to this writer.
+    ///       If no sub-writer is registered for the column, the batch will be released immediately.
+    ///       If only one sub-writer is registered for the column, the batch may be directly
+    ///       forwarded to that sub-writer. If multiple sub-writers are registered, this writer may
+    ///       import the batch once and export independent ArrowArray instances for each sub-writer.
+    ///       Callers must not access or release `batch` after this call.
+    ///
+    /// @return `Status::OK()` on success; otherwise, an error indicating failure.
     virtual Status AddBatch(const std::string& column_name, ::ArrowArray* batch) = 0;
 
     /// Serializes the complete file index (magic + version + header + body) into a Bytes buffer.
     ///
     /// @param pool Memory pool for output allocation.
     /// @return The serialized bytes, or an error if any sub-writer fails to serialize.
-    virtual Result<std::shared_ptr<Bytes>> Serialize(
+    virtual Result<PAIMON_UNIQUE_PTR<Bytes>> Serialize(
         const std::shared_ptr<MemoryPool>& pool) const = 0;
 
     /// Returns true if no sub-writers have been registered.
