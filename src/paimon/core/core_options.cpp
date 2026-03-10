@@ -313,6 +313,10 @@ struct CoreOptions::Impl {
     bool force_lookup = false;
     bool partial_update_remove_record_on_delete = false;
     bool file_index_read_enabled = true;
+    std::vector<std::string> file_index_bitmap_columns;
+    std::vector<std::string> file_index_bsi_columns;
+    std::vector<std::string> file_index_bloom_filter_columns;
+    int64_t file_index_in_manifest_threshold = 1024 * 1024;  // 1MB default
     bool enable_adaptive_prefetch_strategy = true;
     bool index_file_in_data_file_dir = false;
     bool row_tracking_enabled = false;
@@ -467,6 +471,26 @@ Result<CoreOptions> CoreOptions::FromMap(
     // Parse file-index.read.enabled
     PAIMON_RETURN_NOT_OK(
         parser.Parse<bool>(Options::FILE_INDEX_READ_ENABLED, &impl->file_index_read_enabled));
+
+    // Parse file-index.bitmap.columns
+    PAIMON_RETURN_NOT_OK(parser.ParseList(Options::FILE_INDEX_BITMAP_COLUMNS,
+                                          Options::FIELDS_SEPARATOR,
+                                          &impl->file_index_bitmap_columns));
+
+    // Parse file-index.bsi.columns
+    PAIMON_RETURN_NOT_OK(parser.ParseList(
+        Options::FILE_INDEX_BSI_COLUMNS, Options::FIELDS_SEPARATOR, &impl->file_index_bsi_columns));
+
+    // Parse file-index.bloom-filter.columns
+    PAIMON_RETURN_NOT_OK(parser.ParseList(Options::FILE_INDEX_BLOOM_FILTER_COLUMNS,
+                                          Options::FIELDS_SEPARATOR,
+                                          &impl->file_index_bloom_filter_columns));
+
+    // Parse file-index.in-manifest-threshold
+    if (parser.ContainsKey(Options::FILE_INDEX_IN_MANIFEST_THRESHOLD)) {
+        PAIMON_RETURN_NOT_OK(parser.ParseMemorySize(Options::FILE_INDEX_IN_MANIFEST_THRESHOLD,
+                                                    &impl->file_index_in_manifest_threshold));
+    }
 
     // Parse data-file.external-paths
     std::string data_file_external_paths;
@@ -808,6 +832,22 @@ std::string CoreOptions::GetBranch() const {
 
 bool CoreOptions::FileIndexReadEnabled() const {
     return impl_->file_index_read_enabled;
+}
+
+const std::vector<std::string>& CoreOptions::GetFileIndexBitmapColumns() const {
+    return impl_->file_index_bitmap_columns;
+}
+
+const std::vector<std::string>& CoreOptions::GetFileIndexBsiColumns() const {
+    return impl_->file_index_bsi_columns;
+}
+
+const std::vector<std::string>& CoreOptions::GetFileIndexBloomFilterColumns() const {
+    return impl_->file_index_bloom_filter_columns;
+}
+
+int64_t CoreOptions::GetFileIndexInManifestThreshold() const {
+    return impl_->file_index_in_manifest_threshold;
 }
 
 std::optional<std::string> CoreOptions::GetDataFileExternalPaths() const {

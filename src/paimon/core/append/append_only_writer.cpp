@@ -33,6 +33,7 @@
 #include "paimon/core/io/data_file_path_factory.h"
 #include "paimon/core/io/data_file_writer.h"
 #include "paimon/core/io/data_increment.h"
+#include "paimon/core/io/file_index_writer_factory.h"
 #include "paimon/core/io/rolling_blob_file_writer.h"
 #include "paimon/core/io/rolling_file_writer.h"
 #include "paimon/core/io/single_file_writer.h"
@@ -137,10 +138,14 @@ AppendOnlyWriter::SingleFileWriterCreator AppendOnlyWriter::GetDataFileWriterCre
             PAIMON_RETURN_NOT_OK_FROM_ARROW(arrow::ExportSchema(*schema, &arrow_schema));
             PAIMON_ASSIGN_OR_RAISE(std::shared_ptr<FormatStatsExtractor> stats_extractor,
                                    format->CreateStatsExtractor(&arrow_schema));
+            std::unique_ptr<FileIndexFormat::Writer> file_index_writer;
+            PAIMON_ASSIGN_OR_RAISE(file_index_writer,
+                                   FileIndexWriterFactory::Create(schema, options_, memory_pool_));
             auto writer = std::make_unique<DataFileWriter>(
                 options_.GetFileCompression(), std::function<Status(ArrowArray*, ArrowArray*)>(),
                 schema_id_, seq_num_counter_, FileSource::Append(), stats_extractor,
-                path_factory_->IsExternalPath(), write_cols, memory_pool_);
+                path_factory_->IsExternalPath(), write_cols, memory_pool_, schema,
+                std::move(file_index_writer), options_.GetFileIndexInManifestThreshold());
             PAIMON_RETURN_NOT_OK(
                 writer->Init(options_.GetFileSystem(), path_factory_->NewPath(), writer_builder));
             return writer;

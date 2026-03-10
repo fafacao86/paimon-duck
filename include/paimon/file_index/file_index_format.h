@@ -21,11 +21,16 @@
 #include <string>
 #include <vector>
 
+#include "arrow/type_fwd.h"
 #include "paimon/file_index/file_index_reader.h"
+#include "paimon/file_index/file_index_writer.h"
+#include "paimon/memory/bytes.h"
+#include "paimon/memory/memory_pool.h"
 #include "paimon/result.h"
 #include "paimon/visibility.h"
 
 struct ArrowSchema;
+struct ArrowArray;
 
 namespace paimon {
 class InputStream;
@@ -86,6 +91,8 @@ class MemoryPool;
 class PAIMON_EXPORT FileIndexFormat {
  public:
     class Reader;
+    class Writer;
+
     /// Creates a `Reader` to parse a index file (may contain multiple indexes) from the given input
     /// stream.
     ///
@@ -95,6 +102,9 @@ class PAIMON_EXPORT FileIndexFormat {
     ///         (e.g., wrong magic, unsupported version, or corrupted data).
     static Result<std::unique_ptr<Reader>> CreateReader(
         const std::shared_ptr<InputStream>& input_stream, const std::shared_ptr<MemoryPool>& pool);
+
+    /// Creates a `Writer` for building a complete file index (header + body).
+    static std::unique_ptr<Writer> CreateWriter();
 
  public:
     static const int64_t MAGIC;
@@ -115,6 +125,48 @@ class FileIndexFormat::Reader {
     ///         malformed.
     virtual Result<std::vector<std::shared_ptr<FileIndexReader>>> ReadColumnIndex(
         const std::string& column_name, ::ArrowSchema* arrow_schema) const = 0;
+};
+
+/// Writer for file index file. Collects per-column index writers, feeds them data,
+/// and serializes the complete file index binary (magic + version + header + body).
+class FileIndexFormat::Writer {
+ public:
+    virtual ~Writer() = default;
+
+    /// Registers a sub-writer for a specific (column, index_type) pair.
+    ///
+    /// @param column_name  Name of the column this index covers.
+    /// @param index_type   Identifier of the index type (e.g. "bitmap", "bsi").
+    /// @param writer       The concrete FileIndexWriter that builds the index body bytes.
+    /// @param struct_type  Arrow struct type wrapping the single indexed field, used internally
+    ///                     to safely duplicate the ArrowArray when multiple writers share a column.
+    virtual Status AddIndexWriter(const std::string& column_name, const std::string& index_type,
+                                  std::shared_ptr<FileIndexWriter> writer,
+                                  std::shared_ptr<arrow::DataType> struct_type) = 0;
+    /// Feeds a batch of data to all sub-writers registered for the given column.
+    ///
+    /// @param column_name Name of the column whose sub-writers should receive this batch.
+    /// @param batch       ArrowArray containing the column data.
+    ///
+    /// @note Ownership of `batch` is transferred to this writer.
+    ///       If no sub-writer is registered for the column, the batch will be released immediately.
+    ///       If only one sub-writer is registered for the column, the batch may be directly
+    ///       forwarded to that sub-writer. If multiple sub-writers are registered, this writer may
+    ///       import the batch once and export independent ArrowArray instances for each sub-writer.
+    ///       Callers must not access or release `batch` after this call.
+    ///
+    /// @return `Status::OK()` on success; otherwise, an error indicating failure.
+    virtual Status AddBatch(const std::string& column_name, ::ArrowArray* batch) = 0;
+
+    /// Serializes the complete file index (magic + version + header + body) into a Bytes buffer.
+    ///
+    /// @param pool Memory pool for output allocation.
+    /// @return The serialized bytes, or an error if any sub-writer fails to serialize.
+    virtual Result<PAIMON_UNIQUE_PTR<Bytes>> Serialize(
+        const std::shared_ptr<MemoryPool>& pool) const = 0;
+
+    /// Returns true if no sub-writers have been registered.
+    virtual bool IsEmpty() const = 0;
 };
 
 }  // namespace paimon
