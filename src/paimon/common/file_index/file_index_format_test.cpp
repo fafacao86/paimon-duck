@@ -860,9 +860,7 @@ TEST_F(FileIndexFormatTest, TestWriterAndReader) {
         std::shared_ptr<arrow::Array> col1_array;
         ASSERT_TRUE(builder.Finish(&col1_array).ok());
         auto col1_struct = arrow::StructArray::Make({col1_array}, {"col1"}).ValueOrDie();
-        ArrowArray c_col1_array;
-        ASSERT_TRUE(arrow::ExportArray(*col1_struct, &c_col1_array).ok());
-        ASSERT_OK(writer->AddBatch("col1", &c_col1_array));
+        ASSERT_OK(writer->AddBatch("col1", col1_struct));
     }
 
     // Feed col2 data: [10, 10, 20, 10, 20, null, 30, 30]
@@ -875,9 +873,7 @@ TEST_F(FileIndexFormatTest, TestWriterAndReader) {
         std::shared_ptr<arrow::Array> col2_array;
         ASSERT_TRUE(builder.Finish(&col2_array).ok());
         auto col2_struct = arrow::StructArray::Make({col2_array}, {"col2"}).ValueOrDie();
-        ArrowArray c_col2_array;
-        ASSERT_TRUE(arrow::ExportArray(*col2_struct, &c_col2_array).ok());
-        ASSERT_OK(writer->AddBatch("col2", &c_col2_array));
+        ASSERT_OK(writer->AddBatch("col2", col2_struct));
     }
 
     // Serialize
@@ -967,7 +963,7 @@ static void RegisterBitmapWriter(FileIndexFormat::Writer* writer, const std::str
                            arrow::struct_({col_field}));
 }
 
-// Helper: build a single-column int32 struct ArrowArray and call writer->AddBatch.
+// Helper: build a single-column int32 struct and call writer->AddBatch.
 static void AddInt32Batch(FileIndexFormat::Writer* writer, const std::string& col_name,
                           const std::vector<int32_t>& values, const std::vector<bool>& validity) {
     arrow::Int32Builder builder;
@@ -975,9 +971,7 @@ static void AddInt32Batch(FileIndexFormat::Writer* writer, const std::string& co
     std::shared_ptr<arrow::Array> arr;
     ASSERT_TRUE(builder.Finish(&arr).ok());
     auto struct_arr = arrow::StructArray::Make({arr}, {col_name}).ValueOrDie();
-    ArrowArray c_arr;
-    ASSERT_TRUE(arrow::ExportArray(*struct_arr, &c_arr).ok());
-    ASSERT_OK(writer->AddBatch(col_name, &c_arr));
+    ASSERT_OK(writer->AddBatch(col_name, struct_arr));
 }
 
 TEST_F(FileIndexFormatTest, TestWriterHeaderBytesExact) {
@@ -1154,11 +1148,9 @@ TEST_F(FileIndexFormatTest, TestWriterAddBatchToUnregisteredColumn) {
     std::shared_ptr<arrow::Array> arr;
     ASSERT_TRUE(builder.Finish(&arr).ok());
     auto struct_arr = arrow::StructArray::Make({arr}, {"unregistered"}).ValueOrDie();
-    ArrowArray c_arr;
-    ASSERT_TRUE(arrow::ExportArray(*struct_arr, &c_arr).ok());
 
     // Should succeed and not touch the registered col1 data
-    ASSERT_OK(writer->AddBatch("unregistered", &c_arr));
+    ASSERT_OK(writer->AddBatch("unregistered", struct_arr));
 
     // Feed col1 with valid data
     AddInt32Batch(writer.get(), "col1", {1, 2, 3}, {true, true, true});
@@ -1184,7 +1176,7 @@ TEST_F(FileIndexFormatTest, TestWriterAddBatchToUnregisteredColumn) {
 }
 
 TEST_F(FileIndexFormatTest, TestWriterAddBatchToUnregisteredColumnReleasesBatch) {
-    // Empty writer: no AddIndexWriter called. AddBatch for any column should release the batch.
+    // Empty writer: no AddIndexWriter called. AddBatch for any column should succeed (no-op).
     auto writer = FileIndexFormat::CreateWriter();
 
     arrow::Int32Builder builder;
@@ -1192,11 +1184,8 @@ TEST_F(FileIndexFormatTest, TestWriterAddBatchToUnregisteredColumnReleasesBatch)
     std::shared_ptr<arrow::Array> arr;
     ASSERT_TRUE(builder.Finish(&arr).ok());
     auto struct_arr = arrow::StructArray::Make({arr}, {"any_column"}).ValueOrDie();
-    ArrowArray c_arr;
-    ASSERT_TRUE(arrow::ExportArray(*struct_arr, &c_arr).ok());
 
-    ASSERT_OK(writer->AddBatch("any_column", &c_arr));
-    ASSERT_TRUE(ArrowArrayIsReleased(&c_arr));
+    ASSERT_OK(writer->AddBatch("any_column", struct_arr));
 }
 
 TEST_F(FileIndexFormatTest, TestWriterInt64Column) {
@@ -1222,9 +1211,7 @@ TEST_F(FileIndexFormatTest, TestWriterInt64Column) {
         std::shared_ptr<arrow::Array> arr;
         ASSERT_TRUE(builder.Finish(&arr).ok());
         auto struct_arr = arrow::StructArray::Make({arr}, {"bigcol"}).ValueOrDie();
-        ArrowArray c_arr;
-        ASSERT_TRUE(arrow::ExportArray(*struct_arr, &c_arr).ok());
-        ASSERT_OK(writer->AddBatch("bigcol", &c_arr));
+        ASSERT_OK(writer->AddBatch("bigcol", struct_arr));
     }
 
     ASSERT_OK_AND_ASSIGN(auto bytes, writer->Serialize(pool_));
@@ -1480,13 +1467,10 @@ TEST_F(FileIndexFormatTest, TestWriterAddBatchMultiWriterFailureReleasesResource
     std::shared_ptr<arrow::Array> arr;
     ASSERT_TRUE(builder.Finish(&arr).ok());
     auto struct_arr = arrow::StructArray::Make({arr}, {"c"}).ValueOrDie();
-    ArrowArray c_arr;
-    ASSERT_TRUE(arrow::ExportArray(*struct_arr, &c_arr).ok());
 
-    Status st = writer->AddBatch("c", &c_arr);
+    Status st = writer->AddBatch("c", struct_arr);
     ASSERT_FALSE(st.ok());
     ASSERT_TRUE(st.ToString().find("injected failure") != std::string::npos);
-    ASSERT_TRUE(ArrowArrayIsReleased(&c_arr));
 }
 
 TEST_F(FileIndexFormatTest, TestWriterEmptyIndexEntry) {

@@ -34,24 +34,21 @@ class PAIMON_EXPORT FileIndexWriter {
 
     /// Adds a batch of data to the index writer.
     ///
-    /// @param batch Pointer to a C ArrowArray derived from an Arrow struct array containing
-    ///              the indexed field.
-    ///
-    /// @note Ownership of `batch` is transferred to the callee.
-    ///       Implementations must either consume the array (for example by importing or moving it)
-    ///       or release it on failure. Callers must not access or release `batch` after this call.
-    ///
-    /// @return `Status::OK()` on success; otherwise, an error indicating failure
-    ///         (e.g. schema mismatch or invalid input batch).
+    /// @param batch Pointer to a C ArrowArray derived from arrow struct array contain specified
+    ///              indexed field.
+    /// @return `Status::OK()` on success; otherwise, an error indicating failure (e.g., schema
+    ///         mismatch).
     virtual Status AddBatch(::ArrowArray* batch) = 0;
 
     /// Serializes the built index into a byte buffer.
     ///
     /// @note This method returns the complete serialized form of the index after all batches
-    ///       have been added. It should be called only after all `AddBatch()` calls complete.
+    /// have been added. It can be called only once and typically assumes no further calls to
+    /// `AddBatch()` will occur afterward.
     ///
-    /// @return A pool-managed unique pointer to the serialized index bytes,
+    /// @return A unique pointer to a byte array containing the serialized index data,
     ///         or an error if serialization fails.
     virtual Result<PAIMON_UNIQUE_PTR<Bytes>> SerializedBytes() const = 0;
 };
+
 }  // namespace paimon
