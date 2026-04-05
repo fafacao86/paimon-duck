@@ -409,6 +409,7 @@ struct CoreOptions::Impl {
     bool commit_force_compact = false;
     bool compaction_force_rewrite_all_files = false;
     bool compaction_force_up_level_0 = false;
+    bool compaction_parquet_read_as_binary_view = true;
     std::optional<std::string> global_index_external_path;
 
     std::optional<std::string> scan_tag_name;
@@ -630,6 +631,10 @@ Result<CoreOptions> CoreOptions::FromMap(
     // Parse compaction.force-up-level-0
     PAIMON_RETURN_NOT_OK(parser.Parse<bool>(Options::COMPACTION_FORCE_UP_LEVEL_0,
                                             &impl->compaction_force_up_level_0));
+
+    // Parse compaction.parquet.read-as-binary-view
+    PAIMON_RETURN_NOT_OK(parser.Parse<bool>(Options::COMPACTION_PARQUET_READ_AS_BINARY_VIEW,
+                                            &impl->compaction_parquet_read_as_binary_view));
 
     // Parse compaction.optimization-interval
     std::string optimized_compaction_interval_str;
@@ -1024,6 +1029,10 @@ bool CoreOptions::CompactionForceRewriteAllFiles() const {
 
 bool CoreOptions::CompactionForceUpLevel0() const {
     return impl_->compaction_force_up_level_0;
+}
+
+bool CoreOptions::CompactionParquetReadAsBinaryView() const {
+    return impl_->compaction_parquet_read_as_binary_view;
 }
 
 std::map<std::string, std::string> CoreOptions::GetFieldsSequenceGroups() const {

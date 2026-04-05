@@ -201,11 +201,12 @@ class PkCompactionInteTest : public ::testing::Test,
 
     Result<std::vector<std::shared_ptr<CommitMessage>>> CompactAndCommit(
         const std::string& table_path, const std::map<std::string, std::string>& partition,
-        int32_t bucket, bool full_compaction, int64_t commit_identifier) {
+        int32_t bucket, bool full_compaction, int64_t commit_identifier,
+        const std::map<std::string, std::string>& compact_options = {}) {
         auto io_manager = std::shared_ptr<IOManager>(
             IOManager::Create(PathUtil::JoinPath(dir_->Str(), "tmp")).release());
         WriteContextBuilder write_builder(table_path, "commit_user_1");
-        write_builder.WithStreamingMode(true).WithIOManager(io_manager);
+        write_builder.SetOptions(compact_options).WithStreamingMode(true).WithIOManager(io_manager);
         PAIMON_ASSIGN_OR_RAISE(std::unique_ptr<WriteContext> write_context, write_builder.Finish());
         PAIMON_ASSIGN_OR_RAISE(auto file_store_write,
                                FileStoreWrite::Create(std::move(write_context)));

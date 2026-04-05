@@ -142,7 +142,9 @@ Result<FieldsComparator::FieldComparatorFunc> FieldsComparator::CompareField(
                     return lvalue == rvalue ? 0 : (lvalue < rvalue ? -1 : 1);
                 });
         case arrow::Type::type::STRING:
-        case arrow::Type::type::BINARY: {
+        case arrow::Type::type::STRING_VIEW:
+        case arrow::Type::type::BINARY:
+        case arrow::Type::type::BINARY_VIEW: {
             return FieldsComparator::FieldComparatorFunc(
                 [field_idx](const InternalRow& lhs, const InternalRow& rhs) -> int32_t {
                     auto lvalue = lhs.GetStringView(field_idx);

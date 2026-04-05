@@ -238,6 +238,10 @@ struct PAIMON_EXPORT Options {
     /// level 0 files in candidates. Default value is false.
     static const char COMPACTION_FORCE_UP_LEVEL_0[];
 
+    /// "compaction.parquet.read-as-binary-view" - Whether compaction should enable Parquet
+    /// STRING_VIEW/BINARY_VIEW read optimization. Default value is true.
+    static const char COMPACTION_PARQUET_READ_AS_BINARY_VIEW[];
+
     /// "lookup-compact.max-interval" - The max interval for a gentle mode lookup compaction to be
     /// triggered. For every interval, a forced lookup compaction will be performed to flush L0
     /// files to higher level. This option is only valid when lookup-compact mode is gentle. No

@@ -122,6 +122,7 @@ void KeyValueInMemoryRecordReader::Close() {
 
 Result<std::shared_ptr<arrow::NumericArray<arrow::UInt64Type>>>
 KeyValueInMemoryRecordReader::SortBatch() const {
+    PAIMON_RETURN_NOT_OK(ArrowUtils::EnsureComputeInitialized());
     std::vector<arrow::compute::SortKey> sort_keys;
     sort_keys.reserve(primary_keys_.size() + user_defined_sequence_fields_.size());
     for (const auto& name : primary_keys_) {

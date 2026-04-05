@@ -27,6 +27,7 @@
 #include "arrow/c/bridge.h"
 #include "arrow/compute/api.h"
 #include "paimon/common/reader/reader_utils.h"
+#include "paimon/common/utils/arrow/arrow_utils.h"
 #include "paimon/common/utils/arrow/status_utils.h"
 #include "paimon/common/utils/date_time_utils.h"
 #include "paimon/core/io/key_value_data_file_record_reader.h"
@@ -152,6 +153,7 @@ class ReadResultCollector {
     static Result<std::shared_ptr<arrow::ChunkedArray>> SortArray(
         const std::shared_ptr<arrow::ChunkedArray>& array,
         const std::shared_ptr<arrow::Schema>& schema) {
+        PAIMON_RETURN_NOT_OK(ArrowUtils::EnsureComputeInitialized());
         std::vector<arrow::compute::SortKey> sort_keys;
         for (const auto& name : schema->field_names()) {
             sort_keys.emplace_back(name, arrow::compute::SortOrder::Ascending);

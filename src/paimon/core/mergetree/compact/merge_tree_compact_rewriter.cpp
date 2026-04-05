@@ -31,12 +31,88 @@
 #include "paimon/format/file_format.h"
 #include "paimon/format/writer_builder.h"
 #include "paimon/read_context.h"
+
+#include "paimon/format/parquet/parquet_format_defs.h"
 namespace paimon {
+namespace {
+
+std::shared_ptr<arrow::DataType> ToCompactionViewType(
+    const std::shared_ptr<arrow::DataType>& data_type) {
+    switch (data_type->id()) {
+        case arrow::Type::type::STRING:
+            return arrow::utf8_view();
+        case arrow::Type::type::BINARY:
+            return arrow::binary_view();
+        case arrow::Type::type::LIST: {
+            auto list_type = std::static_pointer_cast<arrow::ListType>(data_type);
+            auto value_field = list_type->value_field();
+            return arrow::list(value_field->WithType(ToCompactionViewType(value_field->type())));
+        }
+        case arrow::Type::type::MAP: {
+            auto map_type = std::static_pointer_cast<arrow::MapType>(data_type);
+            auto key_field = map_type->key_field()->WithType(
+                ToCompactionViewType(map_type->key_field()->type()));
+            auto item_field = map_type->item_field()->WithType(
+                ToCompactionViewType(map_type->item_field()->type()));
+            return std::make_shared<arrow::MapType>(key_field, item_field,
+                                                    map_type->keys_sorted());
+        }
+        case arrow::Type::type::STRUCT: {
+            arrow::FieldVector fields;
+            fields.reserve(data_type->num_fields());
+            for (const auto& field : data_type->fields()) {
+                fields.emplace_back(field->WithType(ToCompactionViewType(field->type())));
+            }
+            return arrow::struct_(fields);
+        }
+        default:
+            return data_type;
+    }
+}
+
+std::shared_ptr<arrow::Schema> ToCompactionViewSchema(
+    const std::shared_ptr<arrow::Schema>& schema) {
+    arrow::FieldVector fields;
+    fields.reserve(schema->num_fields());
+    for (const auto& field : schema->fields()) {
+        fields.emplace_back(field->WithType(ToCompactionViewType(field->type())));
+    }
+    return arrow::schema(fields, schema->metadata());
+}
+
+}  // namespace
+
+std::shared_ptr<arrow::Schema> MergeTreeCompactRewriter::GetWriteSchemaForLevel(
+    int32_t level) const {
+    if (options_.GetWriteFileFormat(level)->Identifier() == "parquet") {
+        return compaction_write_schema_;
+    }
+    return write_schema_;
+}
+
 MergeTreeCompactRewriter::MergeTreeCompactRewriter(
     const BinaryRow& partition, int32_t bucket, int64_t schema_id,
     const std::vector<std::string>& trimmed_primary_keys, const CoreOptions& options,
     const std::shared_ptr<arrow::Schema>& data_schema,
     const std::shared_ptr<arrow::Schema>& write_schema, DeletionVector::Factory dv_factory,
+    const std::shared_ptr<FileStorePathFactoryCache>& path_factory_cache,
+    std::unique_ptr<MergeFileSplitRead>&& merge_file_split_read,
+    MergeFunctionWrapperFactory merge_function_wrapper_factory,
+    const std::shared_ptr<MemoryPool>& pool,
+    const std::shared_ptr<CancellationController>& cancellation_controller)
+    : MergeTreeCompactRewriter(
+          partition, bucket, schema_id, trimmed_primary_keys, options, data_schema, write_schema,
+          ToCompactionViewSchema(write_schema), std::move(dv_factory), path_factory_cache,
+          std::move(merge_file_split_read), std::move(merge_function_wrapper_factory), pool,
+          cancellation_controller) {}
+
+MergeTreeCompactRewriter::MergeTreeCompactRewriter(
+    const BinaryRow& partition, int32_t bucket, int64_t schema_id,
+    const std::vector<std::string>& trimmed_primary_keys, const CoreOptions& options,
+    const std::shared_ptr<arrow::Schema>& data_schema,
+    const std::shared_ptr<arrow::Schema>& write_schema,
+    const std::shared_ptr<arrow::Schema>& compaction_write_schema,
+    DeletionVector::Factory dv_factory,
     const std::shared_ptr<FileStorePathFactoryCache>& path_factory_cache,
     std::unique_ptr<MergeFileSplitRead>&& merge_file_split_read,
     MergeFunctionWrapperFactory merge_function_wrapper_factory,
@@ -51,6 +127,7 @@ MergeTreeCompactRewriter::MergeTreeCompactRewriter(
       trimmed_primary_keys_(trimmed_primary_keys),
       data_schema_(data_schema),
       write_schema_(write_schema),
+      compaction_write_schema_(compaction_write_schema),
       dv_factory_(std::move(dv_factory)),
       path_factory_cache_(path_factory_cache),
       merge_function_wrapper_factory_(std::move(merge_function_wrapper_factory)),
@@ -68,6 +145,7 @@ Result<std::unique_ptr<MergeTreeCompactRewriter>> MergeTreeCompactRewriter::Crea
                            table_schema->TrimmedPrimaryKeys());
     auto data_schema = DataField::ConvertDataFieldsToArrowSchema(table_schema->Fields());
     auto write_schema = SpecialFields::CompleteSequenceAndValueKindField(data_schema);
+    auto compaction_write_schema = ToCompactionViewSchema(write_schema);
 
     // TODO(xinyu.lxy): set executor
     // TODO(xinyu.lxy): temporarily disabled pre-buffer for parquet, which may cause high memory
@@ -79,6 +157,9 @@ Result<std::unique_ptr<MergeTreeCompactRewriter>> MergeTreeCompactRewriter::Crea
         .SetPrefetchBatchCount(3)
         .WithMemoryPool(pool)
         .AddOption("parquet.read.enable-pre-buffer", "false");
+    if (options.CompactionParquetReadAsBinaryView()) {
+        read_context_builder.AddOption(parquet::PARQUET_READ_AS_BINARY_VIEW, "true");
+    }
     PAIMON_ASSIGN_OR_RAISE(std::shared_ptr<ReadContext> read_context,
                            read_context_builder.Finish());
 
@@ -97,8 +178,9 @@ Result<std::unique_ptr<MergeTreeCompactRewriter>> MergeTreeCompactRewriter::Crea
     };
     return std::unique_ptr<MergeTreeCompactRewriter>(new MergeTreeCompactRewriter(
         partition, bucket, table_schema->Id(), trimmed_primary_keys, options, data_schema,
-        write_schema, std::move(dv_factory), path_factory_cache, std::move(merge_file_split_read),
-        merge_function_wrapper_factory, pool, cancellation_controller));
+        write_schema, compaction_write_schema, std::move(dv_factory), path_factory_cache,
+        std::move(merge_file_split_read), merge_function_wrapper_factory, pool,
+        cancellation_controller));
 }
 
 Result<CompactResult> MergeTreeCompactRewriter::Upgrade(int32_t output_level,
@@ -129,9 +211,10 @@ std::unique_ptr<MergeTreeCompactRewriter::KeyValueRollingFileWriter>
 MergeTreeCompactRewriter::CreateRollingRowWriter(int32_t level) {
     auto create_file_writer = [this, level]()
         -> Result<std::unique_ptr<SingleFileWriter<KeyValueBatch, std::shared_ptr<DataFileMeta>>>> {
+        auto target_schema = GetWriteSchemaForLevel(level);
         ::ArrowSchema arrow_schema{};
         ScopeGuard guard([&arrow_schema]() { ArrowSchemaRelease(&arrow_schema); });
-        PAIMON_RETURN_NOT_OK_FROM_ARROW(arrow::ExportSchema(*write_schema_, &arrow_schema));
+        PAIMON_RETURN_NOT_OK_FROM_ARROW(arrow::ExportSchema(*target_schema, &arrow_schema));
         auto format = options_.GetWriteFileFormat(level);
         PAIMON_ASSIGN_OR_RAISE(
             std::shared_ptr<WriterBuilder> writer_builder,
@@ -160,7 +243,7 @@ MergeTreeCompactRewriter::CreateRollingRowWriter(int32_t level) {
 }
 
 Result<MergeTreeCompactRewriter::KeyValueConsumerCreator>
-MergeTreeCompactRewriter::GenerateKeyValueConsumer() const {
+MergeTreeCompactRewriter::GenerateKeyValueConsumer(int32_t output_level) const {
     if (!merge_file_split_read_) {
         return Status::Invalid(
             "merge_file_split_read in MergeTreeCompactRewriter cannot be nullptr");
@@ -169,8 +252,9 @@ MergeTreeCompactRewriter::GenerateKeyValueConsumer() const {
                            ArrowUtils::CreateProjection(
                                /*src_schema=*/merge_file_split_read_->GetValueSchema(),
                                /*target_fields=*/data_schema_->fields()));
+    auto target_schema = GetWriteSchemaForLevel(output_level);
     return MergeTreeCompactRewriter::KeyValueConsumerCreator(
-        [target_schema = write_schema_, pool = pool_,
+        [target_schema = std::move(target_schema), pool = pool_,
          target_to_src_mapping = std::move(target_to_src_mapping)]()
             -> Result<std::unique_ptr<RowToArrowArrayConverter<KeyValue, KeyValueBatch>>> {
             return KeyValueMetaProjectionConsumer::Create(target_schema, target_to_src_mapping,
@@ -253,7 +337,7 @@ Status MergeTreeCompactRewriter::MergeReadAndWrite(
 Result<CompactResult> MergeTreeCompactRewriter::RewriteCompaction(
     int32_t output_level, bool drop_delete, const std::vector<std::vector<SortedRun>>& sections) {
     PAIMON_ASSIGN_OR_RAISE(MergeTreeCompactRewriter::KeyValueConsumerCreator create_consumer,
-                           GenerateKeyValueConsumer());
+                           GenerateKeyValueConsumer(output_level));
 
     std::vector<std::shared_ptr<MergeTreeCompactRewriter::KeyValueMergeReader>> reader_holders;
     auto rolling_writer = CreateRollingRowWriter(output_level);

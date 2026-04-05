@@ -21,6 +21,7 @@
 #include "paimon/core/mergetree/compact/lookup_changelog_merge_function_wrapper.h"
 #include "paimon/core/mergetree/lookup/file_position.h"
 #include "paimon/core/mergetree/lookup/positioned_key_value.h"
+#include "paimon/format/parquet/parquet_format_defs.h"
 
 namespace paimon {
 template <typename T>
@@ -69,7 +70,8 @@ LookupMergeTreeCompactRewriter<T>::Create(
         .SetPrefetchMaxParallelNum(1)
         .SetPrefetchBatchCount(3)
         .WithMemoryPool(pool)
-        .AddOption("parquet.read.enable-pre-buffer", "false");
+        .AddOption("parquet.read.enable-pre-buffer", "false")
+        .AddOption(parquet::PARQUET_READ_AS_BINARY_VIEW, "true");
     PAIMON_ASSIGN_OR_RAISE(std::shared_ptr<ReadContext> read_context,
                            read_context_builder.Finish());
 

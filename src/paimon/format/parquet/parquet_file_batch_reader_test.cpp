@@ -231,6 +231,37 @@ TEST_F(ParquetFileBatchReaderTest, TestSetReadSchema) {
     ASSERT_FALSE(result_with_read_schema);
 }
 
+TEST_F(ParquetFileBatchReaderTest, TestReadAsBinaryView) {
+    auto view_schema =
+        arrow::schema({arrow::field("f8", arrow::utf8()), arrow::field("f9", arrow::binary())});
+    auto view_array = arrow::StructArray::Make({struct_array_->field(7), struct_array_->field(8)},
+                                               view_schema->fields())
+                          .ValueOrDie();
+    WriteArray(file_path_, view_array, view_schema, /*write_batch_size=*/10,
+               /*enable_dictionary=*/false, /*max_row_group_length=*/10);
+
+    ASSERT_OK_AND_ASSIGN(std::shared_ptr<InputStream> input_stream, fs_->Open(file_path_));
+    auto length = fs_->GetFileStatus(file_path_).value()->GetLen();
+    auto in_stream =
+        std::make_unique<ParquetInputStreamImpl>(std::move(input_stream), pool_, length);
+    std::map<std::string, std::string> options = {{PARQUET_READ_AS_BINARY_VIEW, "true"}};
+
+    auto parquet_batch_reader = PrepareParquetFileBatchReader(
+        std::move(in_stream), options, view_schema, /*predicate=*/nullptr,
+        /*selection_bitmap=*/std::nullopt, batch_size_);
+    ASSERT_OK_AND_ASSIGN(auto result_array,
+                         paimon::test::ReadResultCollector::CollectResult(
+                             parquet_batch_reader.get()));
+    ASSERT_EQ(result_array->type()->field(0)->type()->id(), arrow::Type::type::STRING_VIEW);
+    ASSERT_EQ(result_array->type()->field(1)->type()->id(), arrow::Type::type::BINARY_VIEW);
+
+    auto chunk = std::static_pointer_cast<arrow::StructArray>(result_array->chunk(0));
+    auto string_array = std::static_pointer_cast<arrow::StringViewArray>(chunk->field(0));
+    auto binary_array = std::static_pointer_cast<arrow::BinaryViewArray>(chunk->field(1));
+    ASSERT_EQ(string_array->GetView(0), "s31");
+    ASSERT_EQ(binary_array->GetView(1), "a32");
+}
+
 TEST_F(ParquetFileBatchReaderTest, TestNextBatchSimple) {
     std::string file_name = paimon::test::GetDataDir() +
                             "parquet/parquet_append_table.db/parquet_append_table/bucket-0/"

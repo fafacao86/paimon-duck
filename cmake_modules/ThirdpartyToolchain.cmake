@@ -1097,20 +1097,28 @@ macro(build_arrow)
     file(MAKE_DIRECTORY "${ARROW_INCLUDE_DIR}")
 
     set(ARROW_BUILD_DIR "${CMAKE_BINARY_DIR}/arrow")
+    set(ARROW_LIB_SUFFIX "")
+    if(UPPERCASE_BUILD_TYPE STREQUAL "DEBUG")
+        set(ARROW_LIB_SUFFIX "d")
+    endif()
+
     set(ARROW_STATIC_LIB
-        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow${ARROW_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(ARROW_DATASET_STATIC_LIB
-        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow_dataset${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow_dataset${ARROW_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(ARROW_ACERO_STATIC_LIB
-        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow_acero${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow_acero${ARROW_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    )
+    set(ARROW_COMPUTE_STATIC_LIB
+        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow_compute${ARROW_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(ARROW_BUNDLED_DEP_STATIC_LIB
         "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}arrow_bundled_dependencies${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
     set(PARQUET_STATIC_LIB
-        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}parquet${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        "${ARROW_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}parquet${ARROW_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
 
     set(ARROW_CMAKE_ARGS
@@ -1141,7 +1149,7 @@ macro(build_arrow)
         -DARROW_WITH_LZ4=ON
         -DARROW_WITH_ZSTD=ON
         -DARROW_WITH_BZ2=OFF
-        -DARROW_WITH_BROTLI=ON
+        -DARROW_WITH_BROTLI=OFF
         -DZSTD_ROOT=${ARROW_ZSTD_ROOT}
         -DZLIB_ROOT=${ARROW_ZLIB_ROOT}
         -DSnappy_ROOT=${ARROW_SNAPPY_ROOT}
@@ -1163,34 +1171,40 @@ macro(build_arrow)
                                          "${PARQUET_STATIC_LIB}"
                                          "${ARROW_DATASET_STATIC_LIB}"
                                          "${ARROW_ACERO_STATIC_LIB}"
+                                         "${ARROW_COMPUTE_STATIC_LIB}"
                         DEPENDS zstd snappy lz4 zlib)
 
     add_library(arrow STATIC IMPORTED)
     set_target_properties(arrow
-                          PROPERTIES IMPORTED_LOCATION "${ARROW_PREFIX}/lib/libarrow.a"
+                          PROPERTIES IMPORTED_LOCATION "${ARROW_STATIC_LIB}"
                                      INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
                                      INTERFACE_LINK_DIRECTORIES
                                      "${ARROW_BUILD_DIR}/${LOWERCASE_BUILD_TYPE}")
 
     add_library(arrow_dataset STATIC IMPORTED)
     set_target_properties(arrow_dataset
-                          PROPERTIES IMPORTED_LOCATION
-                                     "${ARROW_PREFIX}/lib/libarrow_dataset.a"
+                          PROPERTIES IMPORTED_LOCATION "${ARROW_DATASET_STATIC_LIB}"
                                      INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
                                      INTERFACE_LINK_DIRECTORIES
                                      "${ARROW_BUILD_DIR}/${LOWERCASE_BUILD_TYPE}")
 
     add_library(arrow_acero STATIC IMPORTED)
     set_target_properties(arrow_acero
-                          PROPERTIES IMPORTED_LOCATION
-                                     "${ARROW_PREFIX}/lib/libarrow_acero.a"
+                          PROPERTIES IMPORTED_LOCATION "${ARROW_ACERO_STATIC_LIB}"
+                                     INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
+                                     INTERFACE_LINK_DIRECTORIES
+                                     "${ARROW_BUILD_DIR}/${LOWERCASE_BUILD_TYPE}")
+
+    add_library(arrow_compute STATIC IMPORTED)
+    set_target_properties(arrow_compute
+                          PROPERTIES IMPORTED_LOCATION "${ARROW_COMPUTE_STATIC_LIB}"
                                      INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
                                      INTERFACE_LINK_DIRECTORIES
                                      "${ARROW_BUILD_DIR}/${LOWERCASE_BUILD_TYPE}")
 
     add_library(parquet STATIC IMPORTED)
     set_target_properties(parquet
-                          PROPERTIES IMPORTED_LOCATION "${ARROW_PREFIX}/lib/libparquet.a"
+                          PROPERTIES IMPORTED_LOCATION "${PARQUET_STATIC_LIB}"
                                      INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
                                      INTERFACE_LINK_DIRECTORIES
                                      "${ARROW_BUILD_DIR}/${LOWERCASE_BUILD_TYPE}")
@@ -1208,8 +1222,11 @@ macro(build_arrow)
     add_dependencies(arrow_bundled_dependencies arrow_ep)
     add_dependencies(arrow_dataset arrow_ep)
     add_dependencies(arrow_acero arrow_ep)
+    add_dependencies(arrow_compute arrow_ep)
 
-    target_link_libraries(arrow_acero INTERFACE arrow)
+    target_link_libraries(arrow_compute INTERFACE arrow)
+
+    target_link_libraries(arrow_acero INTERFACE arrow_compute)
 
     target_link_libraries(arrow_dataset INTERFACE arrow_acero)
 

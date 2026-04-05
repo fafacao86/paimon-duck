@@ -75,7 +75,7 @@ Result<CompactResult> ChangelogMergeTreeRewriter::RewriteOrProduceChangelog(
     int32_t output_level, const std::vector<std::vector<SortedRun>>& sections, bool drop_delete,
     bool rewrite_compact_file) {
     PAIMON_ASSIGN_OR_RAISE(MergeTreeCompactRewriter::KeyValueConsumerCreator create_consumer,
-                           GenerateKeyValueConsumer());
+                           GenerateKeyValueConsumer(output_level));
     std::vector<std::shared_ptr<MergeTreeCompactRewriter::KeyValueMergeReader>> reader_holders;
 
     std::unique_ptr<MergeTreeCompactRewriter::KeyValueRollingFileWriter> compact_file_writer;

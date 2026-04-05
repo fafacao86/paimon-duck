@@ -79,6 +79,7 @@ TEST(CoreOptionsTest, TestDefaultValue) {
     ASSERT_EQ(5, core_options.GetCompactionMinFileNum());
     ASSERT_FALSE(core_options.CompactionForceRewriteAllFiles());
     ASSERT_FALSE(core_options.CompactionForceUpLevel0());
+    ASSERT_TRUE(core_options.CompactionParquetReadAsBinaryView());
     ASSERT_EQ(std::nullopt, core_options.GetFieldsDefaultFunc());
     ASSERT_EQ(std::nullopt, core_options.GetFieldAggFunc("f0").value());
     ASSERT_FALSE(core_options.FieldAggIgnoreRetract("f1").value());
@@ -192,6 +193,7 @@ TEST(CoreOptionsTest, TestFromMap) {
         {Options::COMPACTION_MIN_FILE_NUM, "10"},
         {Options::COMPACTION_FORCE_REWRITE_ALL_FILES, "true"},
         {Options::COMPACTION_FORCE_UP_LEVEL_0, "true"},
+        {Options::COMPACTION_PARQUET_READ_AS_BINARY_VIEW, "false"},
         {Options::COMPACTION_MAX_SIZE_AMPLIFICATION_PERCENT, "123"},
         {Options::COMPACTION_SIZE_RATIO, "9"},
         {Options::NUM_SORTED_RUNS_COMPACTION_TRIGGER, "11"},
@@ -310,6 +312,7 @@ TEST(CoreOptionsTest, TestFromMap) {
     ASSERT_EQ(11, core_options.GetLookupCompactMaxInterval());
     ASSERT_TRUE(core_options.CompactionForceRewriteAllFiles());
     ASSERT_TRUE(core_options.CompactionForceUpLevel0());
+    ASSERT_FALSE(core_options.CompactionParquetReadAsBinaryView());
     ASSERT_EQ(2000, core_options.GetOptimizedCompactionInterval().value());
     ASSERT_EQ(5l * 1024 * 1024 * 1024, core_options.GetCompactionTotalSizeThreshold().value());
     ASSERT_EQ(12l * 1024, core_options.GetCompactionIncrementalSizeThreshold().value());

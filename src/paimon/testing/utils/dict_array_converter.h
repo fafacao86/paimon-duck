@@ -108,6 +108,12 @@ class DictArrayConverter {
                         "DictionaryArray");
                 }
             }
+            case arrow::Type::type::STRING_VIEW: {
+                return ConvertViewArray<arrow::StringViewArray, arrow::StringBuilder>(array, pool);
+            }
+            case arrow::Type::type::BINARY_VIEW: {
+                return ConvertViewArray<arrow::BinaryViewArray, arrow::BinaryBuilder>(array, pool);
+            }
             default: {
                 return array;
             }
@@ -133,6 +139,24 @@ class DictArrayConverter {
         std::shared_ptr<arrow::Array> string_array;
         PAIMON_RETURN_NOT_OK_FROM_ARROW(string_builder->Finish(&string_array));
         return string_array;
+    }
+
+    template <typename ArrayType, typename BuilderType>
+    static Result<std::shared_ptr<arrow::Array>> ConvertViewArray(
+        const std::shared_ptr<arrow::Array>& array, arrow::MemoryPool* pool) {
+        auto view_array = std::dynamic_pointer_cast<ArrayType>(array);
+        auto builder = std::make_shared<BuilderType>(pool);
+        for (int64_t i = 0; i < view_array->length(); ++i) {
+            if (view_array->IsNull(i)) {
+                PAIMON_RETURN_NOT_OK_FROM_ARROW(builder->AppendNull());
+            } else {
+                auto value = view_array->GetView(i);
+                PAIMON_RETURN_NOT_OK_FROM_ARROW(builder->Append(value.data(), value.size()));
+            }
+        }
+        std::shared_ptr<arrow::Array> converted_array;
+        PAIMON_RETURN_NOT_OK_FROM_ARROW(builder->Finish(&converted_array));
+        return converted_array;
     }
 };
 }  // namespace paimon::test

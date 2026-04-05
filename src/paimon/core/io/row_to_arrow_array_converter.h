@@ -139,12 +139,18 @@ Status RowToArrowArrayConverter<T, R>::Reserve(arrow::ArrayBuilder* array_builde
                 string_builder->ReserveData(INFLATION_FACTOR * reserved_sizes_[(*idx)++]));
             break;
         }
+        case arrow::Type::type::STRING_VIEW: {
+            break;
+        }
         case arrow::Type::type::BINARY: {
             // reserve binary data buffer
             PAIMON_ASSIGN_OR_RAISE(auto* binary_builder,
                                    CastToTypedBuilder<arrow::BinaryBuilder>(array_builder));
             PAIMON_RETURN_NOT_OK_FROM_ARROW(
                 binary_builder->ReserveData(INFLATION_FACTOR * reserved_sizes_[(*idx)++]));
+            break;
+        }
+        case arrow::Type::type::BINARY_VIEW: {
             break;
         }
         case arrow::Type::type::LIST: {
@@ -210,11 +216,17 @@ Status RowToArrowArrayConverter<T, R>::Accumulate(const arrow::Array* array, int
             UpdateAccumulatedVec(string_array->value_data()->size(), idx);
             break;
         }
+        case arrow::Type::type::STRING_VIEW: {
+            break;
+        }
         case arrow::Type::type::BINARY: {
             auto binary_array = arrow::internal::checked_cast<const arrow::BinaryArray*>(array);
             assert(binary_array);
             // accumulate the bytes buffer size of binary
             UpdateAccumulatedVec(binary_array->value_data()->size(), idx);
+            break;
+        }
+        case arrow::Type::type::BINARY_VIEW: {
             break;
         }
         case arrow::Type::type::LIST: {
@@ -364,6 +376,16 @@ RowToArrowArrayConverter<T, R>::AppendField(bool use_view, arrow::ArrayBuilder* 
                     return field_builder->Append(str.data(), str.size());
                 });
         }
+        case arrow::Type::type::STRING_VIEW: {
+            PAIMON_ASSIGN_OR_RAISE(auto* field_builder,
+                                   CastToTypedBuilder<arrow::StringViewBuilder>(array_builder));
+            return RowToArrowArrayConverter<T, R>::AppendValueFunc(
+                [field_builder](const DataGetters& data_getter, int32_t pos) -> arrow::Status {
+                    CHECK_AND_APPEND_NULL(data_getter, field_builder, pos);
+                    auto view = data_getter.GetStringView(pos);
+                    return field_builder->Append(view);
+                });
+        }
         case arrow::Type::type::BINARY: {
             (*reserve_count)++;
             PAIMON_ASSIGN_OR_RAISE(auto* field_builder,
@@ -382,6 +404,16 @@ RowToArrowArrayConverter<T, R>::AppendField(bool use_view, arrow::ArrayBuilder* 
                     auto bytes = data_getter.GetBinary(pos);
                     assert(bytes);
                     return field_builder->Append(bytes->data(), bytes->size());
+                });
+        }
+        case arrow::Type::type::BINARY_VIEW: {
+            PAIMON_ASSIGN_OR_RAISE(auto* field_builder,
+                                   CastToTypedBuilder<arrow::BinaryViewBuilder>(array_builder));
+            return RowToArrowArrayConverter<T, R>::AppendValueFunc(
+                [field_builder](const DataGetters& data_getter, int32_t pos) -> arrow::Status {
+                    CHECK_AND_APPEND_NULL(data_getter, field_builder, pos);
+                    auto view = data_getter.GetStringView(pos);
+                    return field_builder->Append(view);
                 });
         }
         case arrow::Type::type::TIMESTAMP: {

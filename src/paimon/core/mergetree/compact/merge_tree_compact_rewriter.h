@@ -72,7 +72,21 @@ class MergeTreeCompactRewriter : public CompactRewriter {
         const BinaryRow& partition, int32_t bucket, int64_t schema_id,
         const std::vector<std::string>& trimmed_primary_keys, const CoreOptions& options,
         const std::shared_ptr<arrow::Schema>& data_schema,
-        const std::shared_ptr<arrow::Schema>& write_schema, DeletionVector::Factory dv_factory,
+        const std::shared_ptr<arrow::Schema>& write_schema,
+        DeletionVector::Factory dv_factory,
+        const std::shared_ptr<FileStorePathFactoryCache>& path_factory_cache,
+        std::unique_ptr<MergeFileSplitRead>&& merge_file_split_read,
+        MergeFunctionWrapperFactory merge_function_wrapper_factory,
+        const std::shared_ptr<MemoryPool>& pool,
+        const std::shared_ptr<CancellationController>& cancellation_controller);
+
+    MergeTreeCompactRewriter(
+        const BinaryRow& partition, int32_t bucket, int64_t schema_id,
+        const std::vector<std::string>& trimmed_primary_keys, const CoreOptions& options,
+        const std::shared_ptr<arrow::Schema>& data_schema,
+        const std::shared_ptr<arrow::Schema>& write_schema,
+        const std::shared_ptr<arrow::Schema>& compaction_write_schema,
+        DeletionVector::Factory dv_factory,
         const std::shared_ptr<FileStorePathFactoryCache>& path_factory_cache,
         std::unique_ptr<MergeFileSplitRead>&& merge_file_split_read,
         MergeFunctionWrapperFactory merge_function_wrapper_factory,
@@ -87,7 +101,7 @@ class MergeTreeCompactRewriter : public CompactRewriter {
 
     std::unique_ptr<KeyValueRollingFileWriter> CreateRollingRowWriter(int32_t level);
 
-    Result<KeyValueConsumerCreator> GenerateKeyValueConsumer() const;
+    Result<KeyValueConsumerCreator> GenerateKeyValueConsumer(int32_t output_level) const;
 
     Status MergeReadAndWrite(int32_t output_level, bool drop_delete,
                              const std::vector<SortedRun>& section,
@@ -100,6 +114,8 @@ class MergeTreeCompactRewriter : public CompactRewriter {
     std::unique_ptr<MergeFileSplitRead> merge_file_split_read_;
 
  private:
+    std::shared_ptr<arrow::Schema> GetWriteSchemaForLevel(int32_t level) const;
+
     Result<std::shared_ptr<DataFilePathFactory>> CreateDataFilePathFactory(
         const std::string& format);
 
@@ -113,6 +129,8 @@ class MergeTreeCompactRewriter : public CompactRewriter {
     std::shared_ptr<arrow::Schema> data_schema_;
     // SequenceNumber + ValueKind + data_schema_
     std::shared_ptr<arrow::Schema> write_schema_;
+    // Compaction-only Arrow schema using STRING_VIEW/BINARY_VIEW for payload columns.
+    std::shared_ptr<arrow::Schema> compaction_write_schema_;
     DeletionVector::Factory dv_factory_;
     std::shared_ptr<FileStorePathFactoryCache> path_factory_cache_;
     MergeFunctionWrapperFactory merge_function_wrapper_factory_;

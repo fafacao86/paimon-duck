@@ -110,7 +110,7 @@ class FileReaderWrapper {
     Result<int32_t> GetRowGroupId(std::pair<uint64_t, uint64_t> target_range) const;
 
     std::unique_ptr<::parquet::arrow::FileReader> file_reader_;
-    std::unique_ptr<arrow::RecordBatchReader> batch_reader_;
+    std::shared_ptr<arrow::RecordBatchReader> batch_reader_;
 
     std::vector<std::pair<uint64_t, uint64_t>> all_row_group_ranges_;
     std::set<int32_t> target_row_group_indices_;

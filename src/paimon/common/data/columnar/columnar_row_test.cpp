@@ -28,6 +28,7 @@
 #include "paimon/common/utils/date_time_utils.h"
 #include "paimon/memory/bytes.h"
 #include "paimon/memory/memory_pool.h"
+#include "paimon/testing/utils/testharness.h"
 
 namespace paimon::test {
 TEST(ColumnarRowTest, TestSimple) {

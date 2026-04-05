@@ -16,8 +16,11 @@
 
 #include "paimon/common/utils/arrow/arrow_utils.h"
 
+#include <mutex>
+
 #include "arrow/array/array_base.h"
 #include "arrow/array/array_nested.h"
+#include "arrow/compute/api.h"
 #include "paimon/common/utils/arrow/status_utils.h"
 
 namespace paimon {
@@ -89,6 +92,18 @@ void ArrowUtils::TraverseArray(const std::shared_ptr<arrow::Array>& array) {
         default:
             return;
     }
+}
+
+Status ArrowUtils::EnsureComputeInitialized() {
+    static std::once_flag init_flag;
+    static Status status = Status::OK();
+    std::call_once(init_flag, []() {
+        auto compute_status = arrow::compute::Initialize();
+        if (!compute_status.ok()) {
+            status = ToPaimonStatus(compute_status);
+        }
+    });
+    return status;
 }
 
 bool ArrowUtils::EqualsIgnoreNullable(const std::shared_ptr<arrow::DataType>& type,

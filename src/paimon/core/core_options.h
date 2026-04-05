@@ -87,6 +87,7 @@ class PAIMON_EXPORT CoreOptions {
     bool CommitForceCompact() const;
     bool CompactionForceRewriteAllFiles() const;
     bool CompactionForceUpLevel0() const;
+    bool CompactionParquetReadAsBinaryView() const;
     int64_t GetCommitTimeout() const;
     int32_t GetCommitMaxRetries() const;
     int32_t GetCompactionMinFileNum() const;
