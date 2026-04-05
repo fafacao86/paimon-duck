@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.8" xml:lang="en-US">
+  <compounddef id="classpaimon_1_1_i_o_manager" kind="class" language="C++" prot="public" abstract="yes">
+    <compoundname>paimon::IOManager</compoundname>
+    <includes refid="io__manager_8h" local="no">/home/runner/work/paimon-duck/paimon-duck/include/paimon/disk/io_manager.h</includes>
+    <sectiondef kind="public-func">
+      <memberdef kind="function" id="classpaimon_1_1_i_o_manager_1ac971c9cb634798905b06a15fd091488a" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type></type>
+        <definition>virtual paimon::IOManager::~IOManager</definition>
+        <argsstring>()=default</argsstring>
+        <name>~IOManager</name>
+        <qualifiedname>paimon::IOManager::~IOManager</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/runner/work/paimon-duck/paimon-duck/include/paimon/disk/io_manager.h" line="30" column="13"/>
+      </memberdef>
+      <memberdef kind="function" id="classpaimon_1_1_i_o_manager_1a99027b65295e8ed766048317fc0a0c35" prot="public" static="no" const="yes" explicit="no" inline="no" virt="pure-virtual">
+        <type><ref refid="classpaimon_1_1_result" kindref="compound">const</ref> std::string &amp;</type>
+        <definition>virtual const std::string &amp; paimon::IOManager::GetTempDir</definition>
+        <argsstring>() const =0</argsstring>
+        <name>GetTempDir</name>
+        <qualifiedname>paimon::IOManager::GetTempDir</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>Temp directory path. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/runner/work/paimon-duck/paimon-duck/include/paimon/disk/io_manager.h" line="34" column="31"/>
+      </memberdef>
+      <memberdef kind="function" id="classpaimon_1_1_i_o_manager_1a86efc5c627dfae60a6b299ab1df0333f" prot="public" static="no" const="yes" explicit="no" inline="no" virt="pure-virtual">
+        <type><ref refid="classpaimon_1_1_result" kindref="compound">Result</ref>&lt; std::string &gt;</type>
+        <definition>virtual Result&lt; std::string &gt; paimon::IOManager::GenerateTempFilePath</definition>
+        <argsstring>(const std::string &amp;prefix) const =0</argsstring>
+        <name>GenerateTempFilePath</name>
+        <qualifiedname>paimon::IOManager::GenerateTempFilePath</qualifiedname>
+        <param>
+          <type><ref refid="classpaimon_1_1_result" kindref="compound">const</ref> std::string &amp;</type>
+          <declname>prefix</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/runner/work/paimon-duck/paimon-duck/include/paimon/disk/io_manager.h" line="36" column="20"/>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="classpaimon_1_1_i_o_manager_1ae883a6867c681b9887c822f2d69895f7" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::unique_ptr&lt; <ref refid="classpaimon_1_1_i_o_manager" kindref="compound">IOManager</ref> &gt;</type>
+        <definition>static std::unique_ptr&lt; IOManager &gt; paimon::IOManager::Create</definition>
+        <argsstring>(const std::string &amp;tmp_dir)</argsstring>
+        <name>Create</name>
+        <qualifiedname>paimon::IOManager::Create</qualifiedname>
+        <param>
+          <type><ref refid="classpaimon_1_1_result" kindref="compound">const</ref> std::string &amp;</type>
+          <declname>tmp_dir</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/runner/work/paimon-duck/paimon-duck/include/paimon/disk/io_manager.h" line="31" column="28"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+<para>The facade for the provided disk I/O services. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/runner/work/paimon-duck/paimon-duck/include/paimon/disk/io_manager.h" line="28" column="1" bodyfile="/home/runner/work/paimon-duck/paimon-duck/include/paimon/disk/io_manager.h" bodystart="28" bodyend="37"/>
+    <listofallmembers>
+      <member refid="classpaimon_1_1_i_o_manager_1ae883a6867c681b9887c822f2d69895f7" prot="public" virt="non-virtual"><scope>paimon::IOManager</scope><name>Create</name></member>
+      <member refid="classpaimon_1_1_i_o_manager_1a86efc5c627dfae60a6b299ab1df0333f" prot="public" virt="pure-virtual"><scope>paimon::IOManager</scope><name>GenerateTempFilePath</name></member>
+      <member refid="classpaimon_1_1_i_o_manager_1a99027b65295e8ed766048317fc0a0c35" prot="public" virt="pure-virtual"><scope>paimon::IOManager</scope><name>GetTempDir</name></member>
+      <member refid="classpaimon_1_1_i_o_manager_1ac971c9cb634798905b06a15fd091488a" prot="public" virt="virtual"><scope>paimon::IOManager</scope><name>~IOManager</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

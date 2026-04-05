@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.8" xml:lang="en-US">
+  <compounddef id="namespacearrow" kind="namespace" language="C++">
+    <compoundname>arrow</compoundname>
+    <innernamespace refid="namespacearrow_1_1ipc">arrow::ipc</innernamespace>
+    <innernamespace refid="namespacearrow_1_1util">arrow::util</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/runner/work/paimon-duck/paimon-duck/include/arrow/ipc/json_simple.h" line="15" column="1"/>
+  </compounddef>
+</doxygen>

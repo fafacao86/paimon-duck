@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.8" xml:lang="en-US">
+  <compounddef id="dir_c2114c90721c8d0c4ae4eb46d97c41f9" kind="dir">
+    <compoundname>/home/runner/work/paimon-duck/paimon-duck/include/arrow</compoundname>
+    <innerdir refid="dir_47b755a077f5be7e0fca9c88192d5163">/home/runner/work/paimon-duck/paimon-duck/include/arrow/ipc</innerdir>
+    <innerdir refid="dir_262933e54dc1b71cb1ead58480c88ede">/home/runner/work/paimon-duck/paimon-duck/include/arrow/util</innerdir>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/runner/work/paimon-duck/paimon-duck/include/arrow/"/>
+  </compounddef>
+</doxygen>
