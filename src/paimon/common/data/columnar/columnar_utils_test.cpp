@@ -23,6 +23,7 @@
 #include "arrow/ipc/json_simple.h"
 #include "gtest/gtest.h"
 #include "paimon/memory/memory_pool.h"
+#include "paimon/testing/utils/testharness.h"
 
 namespace paimon::test {
 TEST(ColumnarUtilsTest, TestGetViewAndBytes) {
@@ -50,6 +51,37 @@ TEST(ColumnarUtilsTest, TestGetViewAndBytesOfDict) {
     ASSERT_EQ("foo", std::string(ColumnarUtils::GetView(dict_array.get(), 2)));
     ASSERT_EQ("baz", std::string(ColumnarUtils::GetView(dict_array.get(), 3)));
     ASSERT_EQ("foo", std::string(ColumnarUtils::GetView(dict_array.get(), 4)));
+}
+
+TEST(ColumnarUtilsTest, TestGetViewAndBytesOfViewArray) {
+    auto pool = GetDefaultPool();
+    auto string_array =
+        arrow::ipc::internal::json::ArrayFromJSON(arrow::utf8_view(), R"(["foo", "barbaz"])")
+            .ValueOrDie();
+    auto binary_array =
+        arrow::ipc::internal::json::ArrayFromJSON(arrow::binary_view(), R"(["aa", "bbbb"])")
+            .ValueOrDie();
+
+    ASSERT_EQ("barbaz", std::string(ColumnarUtils::GetView(string_array.get(), 1)));
+    ASSERT_EQ("aa", std::string(ColumnarUtils::GetView(binary_array.get(), 0)));
+
+    auto bytes = ColumnarUtils::GetBytes<arrow::BinaryType>(binary_array.get(), 1, pool.get());
+    ASSERT_EQ(*std::make_shared<Bytes>("bbbb", pool.get()), *bytes);
+}
+
+TEST(ColumnarUtilsTest, TestGetViewAndBytesOfDictView) {
+    auto dict =
+        arrow::ipc::internal::json::ArrayFromJSON(arrow::utf8_view(), R"(["foo", "bar", "baz"])")
+            .ValueOrDie();
+    auto dict_type = arrow::dictionary(arrow::int32(), arrow::utf8_view());
+    auto indices =
+        arrow::ipc::internal::json::ArrayFromJSON(arrow::int32(), "[1, 2, 0, 2, 0]").ValueOrDie();
+    std::shared_ptr<arrow::DictionaryArray> dict_array =
+        std::make_shared<arrow::DictionaryArray>(dict_type, indices, dict);
+
+    ASSERT_EQ("bar", std::string(ColumnarUtils::GetView(dict_array.get(), 0)));
+    ASSERT_EQ("baz", std::string(ColumnarUtils::GetView(dict_array.get(), 1)));
+    ASSERT_EQ("foo", std::string(ColumnarUtils::GetView(dict_array.get(), 2)));
 }
 
 }  // namespace paimon::test

@@ -80,7 +80,8 @@ Result<InternalRow::FieldGetterFunc> InternalRow::CreateFieldGetter(
             };
             break;
         }
-        case arrow::Type::type::STRING: {
+        case arrow::Type::type::STRING:
+        case arrow::Type::type::STRING_VIEW: {
             field_getter = [field_idx, use_view](const InternalRow& row) -> VariantType {
                 if (use_view) {
                     return row.GetStringView(field_idx);
@@ -90,7 +91,8 @@ Result<InternalRow::FieldGetterFunc> InternalRow::CreateFieldGetter(
             };
             break;
         }
-        case arrow::Type::type::BINARY: {
+        case arrow::Type::type::BINARY:
+        case arrow::Type::type::BINARY_VIEW: {
             field_getter = [field_idx, use_view](const InternalRow& row) -> VariantType {
                 if (use_view) {
                     return row.GetStringView(field_idx);

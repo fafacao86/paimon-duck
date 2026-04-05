@@ -151,7 +151,7 @@ Status FileReaderWrapper::PrepareForReading(const std::set<int32_t>& target_row_
                                             const std::vector<int32_t>& column_indices) {
     std::vector<std::pair<uint64_t, uint64_t>> target_row_groups;
     PAIMON_ASSIGN_OR_RAISE(target_row_groups, GetRowGroupRanges(target_row_group_indices));
-    std::unique_ptr<arrow::RecordBatchReader> batch_reader;
+    std::shared_ptr<arrow::RecordBatchReader> batch_reader;
     PAIMON_RETURN_NOT_OK_FROM_ARROW(file_reader_->GetRecordBatchReader(
         std::vector<int32_t>(target_row_group_indices.begin(), target_row_group_indices.end()),
         column_indices, &batch_reader));

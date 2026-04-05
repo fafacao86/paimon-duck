@@ -134,9 +134,9 @@ class ParquetFormatWriterTest : public ::testing::Test {
                      int32_t row_group_count) const {
         auto file = arrow::io::ReadableFile::Open(file_path, arrow_pool_.get());
         ASSERT_TRUE(file.ok());
-        std::unique_ptr<::parquet::arrow::FileReader> reader;
-        auto status = ::parquet::arrow::OpenFile(file.ValueOrDie(), arrow_pool_.get(), &reader);
-        ASSERT_TRUE(status.ok()) << status.ToString();
+        auto reader_result = ::parquet::arrow::OpenFile(file.ValueOrDie(), arrow_pool_.get());
+        ASSERT_TRUE(reader_result.ok()) << reader_result.status().ToString();
+        auto reader = std::move(reader_result).ValueOrDie();
         const ::parquet::FileMetaData* metadata = reader->parquet_reader()->metadata().get();
         const ::parquet::SchemaDescriptor* schema = metadata->schema();
         ASSERT_EQ(metadata->num_row_groups(), row_group_count);

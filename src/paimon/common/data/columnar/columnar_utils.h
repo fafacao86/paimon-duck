@@ -51,10 +51,26 @@ class ColumnarUtils {
         auto type_id = array->type_id();
         bool is_dict = (type_id == arrow::Type::type::DICTIONARY);
         if (!is_dict) {
-            const auto* typed_array =
-                arrow::internal::checked_cast<const arrow::BinaryArray*>(array);
-            assert(typed_array);
-            return typed_array->GetView(pos);
+            switch (type_id) {
+                case arrow::Type::type::STRING_VIEW: {
+                    const auto* typed_array =
+                        arrow::internal::checked_cast<const arrow::StringViewArray*>(array);
+                    assert(typed_array);
+                    return typed_array->GetView(pos);
+                }
+                case arrow::Type::type::BINARY_VIEW: {
+                    const auto* typed_array =
+                        arrow::internal::checked_cast<const arrow::BinaryViewArray*>(array);
+                    assert(typed_array);
+                    return typed_array->GetView(pos);
+                }
+                default: {
+                    const auto* typed_array =
+                        arrow::internal::checked_cast<const arrow::BinaryArray*>(array);
+                    assert(typed_array);
+                    return typed_array->GetView(pos);
+                }
+            }
         } else {
             const auto* typed_array =
                 arrow::internal::checked_cast<const arrow::DictionaryArray*>(array);
@@ -82,8 +98,28 @@ class ColumnarUtils {
                     typed_array->dictionary().get());
                 assert(dictionary);
                 return dictionary->GetView(dict_index);
+            } else if (value_type_id == arrow::Type::type::STRING_VIEW) {
+                auto dictionary = arrow::internal::checked_cast<arrow::StringViewArray*>(
+                    typed_array->dictionary().get());
+                assert(dictionary);
+                return dictionary->GetView(dict_index);
             } else if (value_type_id == arrow::Type::type::LARGE_STRING) {
                 auto dictionary = arrow::internal::checked_cast<arrow::LargeStringArray*>(
+                    typed_array->dictionary().get());
+                assert(dictionary);
+                return dictionary->GetView(dict_index);
+            } else if (value_type_id == arrow::Type::type::BINARY) {
+                auto dictionary = arrow::internal::checked_cast<arrow::BinaryArray*>(
+                    typed_array->dictionary().get());
+                assert(dictionary);
+                return dictionary->GetView(dict_index);
+            } else if (value_type_id == arrow::Type::type::BINARY_VIEW) {
+                auto dictionary = arrow::internal::checked_cast<arrow::BinaryViewArray*>(
+                    typed_array->dictionary().get());
+                assert(dictionary);
+                return dictionary->GetView(dict_index);
+            } else if (value_type_id == arrow::Type::type::LARGE_BINARY) {
+                auto dictionary = arrow::internal::checked_cast<arrow::LargeBinaryArray*>(
                     typed_array->dictionary().get());
                 assert(dictionary);
                 return dictionary->GetView(dict_index);

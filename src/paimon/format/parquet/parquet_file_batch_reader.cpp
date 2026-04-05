@@ -281,6 +281,12 @@ Result<::parquet::ArrowReaderProperties> ParquetFileBatchReader::CreateArrowRead
         bool enable_pre_buffer,
         OptionsUtils::GetValueFromMap<bool>(options, PARQUET_READ_ENABLE_PRE_BUFFER, true));
     arrow_reader_props.set_pre_buffer(enable_pre_buffer);
+    PAIMON_ASSIGN_OR_RAISE(bool read_as_binary_view,
+                           OptionsUtils::GetValueFromMap<bool>(options, PARQUET_READ_AS_BINARY_VIEW,
+                                                               false));
+    if (read_as_binary_view) {
+        arrow_reader_props.set_binary_type(arrow::Type::BINARY_VIEW);
+    }
     arrow_reader_props.set_batch_size(static_cast<int64_t>(batch_size));
     arrow_reader_props.set_use_threads(use_threads);
     PAIMON_ASSIGN_OR_RAISE(bool cache_lazy, OptionsUtils::GetValueFromMap<bool>(

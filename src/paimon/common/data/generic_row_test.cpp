@@ -28,6 +28,7 @@
 #include "paimon/memory/bytes.h"
 #include "paimon/memory/memory_pool.h"
 #include "paimon/testing/utils/binary_row_generator.h"
+#include "paimon/testing/utils/testharness.h"
 
 namespace paimon::test {
 

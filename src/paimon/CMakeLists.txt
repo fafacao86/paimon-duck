@@ -307,6 +307,23 @@ set(PAIMON_CORE_SRCS
     core/utils/special_field_ids.cpp
     core/utils/tag_manager.cpp)
 
+set(_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
+set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+find_library(BROTLI_ENC_LIB
+             NAMES brotlienc
+             PATHS /usr/lib/x86_64-linux-gnu
+             NO_DEFAULT_PATH)
+find_library(BROTLI_DEC_LIB
+             NAMES brotlidec
+             PATHS /usr/lib/x86_64-linux-gnu
+             NO_DEFAULT_PATH)
+find_library(BROTLI_COMMON_LIB
+             NAMES brotlicommon
+             PATHS /usr/lib/x86_64-linux-gnu
+             NO_DEFAULT_PATH)
+set(CMAKE_FIND_LIBRARY_SUFFIXES ${_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
+unset(_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
+
 add_paimon_lib(paimon
                SOURCES
                ${PAIMON_COMMON_SRCS}
@@ -330,6 +347,9 @@ add_paimon_lib(paimon
                xxhash
                Threads::Threads
                RapidJSON
+               ${BROTLI_ENC_LIB}
+               ${BROTLI_DEC_LIB}
+               ${BROTLI_COMMON_LIB}
                SHARED_LINK_FLAGS
                ${PAIMON_VERSION_SCRIPT_FLAGS})
 
@@ -537,6 +557,7 @@ if(PAIMON_BUILD_TESTS)
                     core/io/data_increment_test.cpp
                     core/io/field_mapping_reader_test.cpp
                     core/io/key_value_data_file_record_reader_test.cpp
+                    core/io/key_value_meta_projection_consumer_test.cpp
                     core/io/key_value_projection_reader_test.cpp
                     core/io/key_value_in_memory_record_reader_test.cpp
                     core/io/complete_row_tracking_fields_reader_test.cpp
