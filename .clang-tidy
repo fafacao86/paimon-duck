@@ -48,6 +48,7 @@ Checks: |
   -modernize-use-trailing-return-type,
   -modernize-use-nodiscard,
   -modernize-pass-by-value,
+  readability-identifier-naming,
 # produce HeaderFilterRegex from cpp/build-support/lint_exclusions.txt with:
 # echo -n '^('; sed -e 's/*/\.*/g' cpp/build-support/lint_exclusions.txt | tr '\n' '|'; echo ')$'
 HeaderFilterRegex: '^(?!.*third_party/).*'
@@ -62,3 +63,5 @@ CheckOptions:
     value:           '2'
   - key:             modernize-use-emplace.IgnoreImplicitConstructors
     value:           1
+  - key:             readability-identifier-naming.PrivateMemberSuffix
+    value:           '_'

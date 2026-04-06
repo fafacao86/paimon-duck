@@ -118,6 +118,10 @@ class PAIMON_EXPORT CoreOptions {
     bool NeedLookup() const;
     bool PrepareCommitWaitCompaction() const;
     bool FileIndexReadEnabled() const;
+    const std::vector<std::string>& GetFileIndexBitmapColumns() const;
+    const std::vector<std::string>& GetFileIndexBsiColumns() const;
+    const std::vector<std::string>& GetFileIndexBloomFilterColumns() const;
+    int64_t GetFileIndexInManifestThreshold() const;
 
     std::map<std::string, std::string> GetFieldsSequenceGroups() const;
     bool PartialUpdateRemoveRecordOnDelete() const;
